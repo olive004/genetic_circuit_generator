@@ -1,6 +1,6 @@
 {
     "experiment": {
-        "purpose": "generate_species_batch",
+        "purpose": "generate_sequence_batch",
         "no_visualisations": true,
         "no_numerical": true,
         "debug_mode": 0

@@ -60,9 +60,9 @@ class SeqGenerator():
         bases = list(seq_prob.keys())
         probs = np.array(list(seq_prob.values()))
         seqs = jr.choice(rng, np.arange(
-            len(bases)), p=probs, shape=(count * num_components, slength))
+            len(bases)), p=probs, shape=(count, num_components, slength))
         seqs = np.vectorize(lambda x: bases[x])(np.array(seqs))
-        sequences = set([''.join(s) for s in seqs])
+        sequences = sorted(set([tuple([''.join(si) for si in s]) for s in seqs.reshape(count, num_components, slength)]))
         return np.array(list(sequences)).reshape((count, num_components))
 
 
@@ -196,7 +196,7 @@ class NucleotideGenerator(SeqGenerator):
         return paths
     
     def generate_sequences(self, count=1, slength=20, num_components=3, seed=0, 
-                           name='rc', species_names=None, out_type='json') -> pd.DataFrame:
+                           name='rna_circuits', species_names=None, out_type='json') -> pd.DataFrame:
         sequences = self.generate_unique_sequences(
             count=count,
             num_components=num_components,

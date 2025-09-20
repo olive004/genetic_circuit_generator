@@ -20,7 +20,9 @@ from synbio_morpher.utils.circuit.agnostic_circuits.circuit_manager import Circu
 
 def prep(df) -> List[dict]:
     return [
-        {'data': df.iloc[i].to_dict(), 'identities': df.columns} for i in range(len(df))
+        {'data': df.iloc[i].to_dict(),
+         'name': f'rc_{i}'} for i in range(len(df))
+        # {'data': df.iloc[i].to_dict(), 'identities': list(df.columns)} for i in range(len(df))
     ]
 
 
@@ -38,6 +40,7 @@ def main(config=None, data_writer=None):
                     name=exp_configs.get("name", 'rc'),
                     count=exp_configs.get("repetitions", 1),
                     num_components=exp_configs.get("species_count", 3), slength=exp_configs["sequence_length"],
+                    seed=exp_configs.get("seed", 1)
                     ),
             req_output=True,
             name="generating_sequences"
