@@ -1,134 +1,25 @@
 {
     "experiment": {
-        "purpose": "ensemble_mutation_effect_analysis"
+        "purpose": "generate_species_batch",
+        "no_visualisations": true,
+        "no_numerical": true,
+        "debug_mode": 0
     },
-    "base_configs_ensemble": {
-        "generate_species_templates": {
-            "interaction_simulator": {
-                "name": "IntaRNA",
-                "postprocess": true
-            },
-            "experiment": {
-                "purpose": "generate_species_templates",
-                "no_visualisations": true,
-                "no_numerical": true,
-                "debug_mode": 0
-            },
-            "molecular_params": "./synbio_morpher/utils/common/configs/RNA_circuit/molecular_params.json",
-            "circuit_generation": {
-                "name": "rc",
-                "repetitions": 1000000,
-                "species_count": 3,
-                "sequence_length": 20,
-                "generator_protocol": "random",
-                "proportion_to_mutate": 1.0,
-                "template": null,
-                "seed": 1
-            },
-            "system_type": "RNA"
-        },
-        "gather_interaction_stats": {
-            "interaction_simulator": {
-                "name": "IntaRNA",
-                "postprocess": true
-            },
-            "interaction_file_keyword": ["energies", "eqconstants", "binding_rates_dissociation", "binding_sites"],
-            "molecular_params": "./synbio_morpher/utils/common/configs/RNA_circuit/molecular_params.json",
-            "experiment": {
-                "purpose": "gather_interaction_stats"
-            },    
-            "system_type": "RNA",
-            "source_of_interactions": {
-                "is_source_dir_incomplete": true,
-                "source_dir": "./data/ensemble_mutation_effect_analysis",
-                "purpose_to_get_source_dir_from": "generate_species_templates",
-                "source_dir_actually_used_POSTERITY": null
-            }
-        },
-        "mutation_effect_on_interactions_signal": {
-            "system_type": "RNA",
-            "include_prod_deg": false,
-            "data_path": null,
-            "experiment": {
-                "purpose": "mutation_effect_on_interactions_signal",
-                "no_visualisations": true,
-                "no_numerical": true,
-                "debug_mode": 0
-            },
-            "interaction_simulator": {
-                "name": "IntaRNA",
-                "postprocess": true
-            },
-            "filters": {
-                "min_num_interacting": 0,
-                "min_num_self_interacting": 0,
-                "max_self_interacting": null,
-                "max_total": 10000000,
-                "not_in_dirs": []
-            },
-            "mutations_args": {
-                "algorithm": "random",
-                "mutation_counts": 0,
-                "mutation_nums_within_sequence": [],
-                "mutation_nums_per_position": 0,
-                "concurrent_species_to_mutate": "single_species_at_a_time",
-                "seed": 0
-            },
-            "signal": {
-                "inputs": ["RNA_0"],
-                "outputs": ["RNA_2"],
-                "function_name": "step_function",
-                "function_kwargs": {
-                    "impulse_center": 1, 
-                    "impulse_halfwidth": 0.5, 
-                    "target": 2
-                }
-            },
-            "simulation": {
-                "dt0": 0.001,
-                "dt1": 0.5,
-                "t0": 0,
-                "t1": 1000,
-                "tmax": 8000,
-                "solver": "diffrax",
-                "use_batch_mutations": true,
-                "interaction_factor": 1,
-                "batch_size": 4000,
-                "max_circuits": 60000,
-                "device": "gpu",
-                "threshold_steady_states": 0.01, 
-                "use_initial_to_add_signal": false,
-                "use_rate_scaling": true,
-                "method": "Dopri5",
-                "stepsize_controller": "adaptive",
-                "save_steps": 100,
-                "save_steps_uselog": true
-            },
-            "simulation_steady_state": {
-                "method": "Dopri5",
-                "stepsize_controller": "adaptive"
-            },
-            "source_of_interaction_stats": {
-                "is_source_dir_incomplete": true,
-                "source_dir": "./data/ensemble_mutation_effect_analysis",
-                "purpose_to_get_source_dir_from": "gather_interaction_stats",
-                "source_dir_actually_used_POSTERITY": null
-            },
-            "molecular_params_factor": 1,
-            "molecular_params": "./synbio_morpher/utils/common/configs/RNA_circuit/molecular_params.json"
-        },
-        "summarise_simulation": {
-            "experiment": {
-                "purpose": "summarise_simulation"
-            },
-            "source_dirs": {
-                "is_source_dir_incomplete": true,
-                "source_dir": "./data/ensemble_mutation_effect_analysis",
-                "purpose_to_get_source_dir_from": "mutation_effect_on_interactions_signal",
-                "source_dir_actually_used_POSTERITY": null
-            },
-            "preprocessing_func": null,
-            "only_visualise_circuits": false
-        }
-    }
+    "interaction_simulator": {
+        "name": "IntaRNA",
+        "postprocess": true
+    },
+    "molecular_params": "./synbio_morpher/utils/common/configs/RNA_circuit/molecular_params.json",
+    "circuit_generation": {
+        "name": "rc",
+        "repetitions": 1000000,
+        "species_count": 3,
+        "sequence_length": 20,
+        "generator_protocol": "random",
+        "proportion_to_mutate": 1.0,
+        "template": null,
+        "seed": 1
+    },
+    "system_type": "RNA"
 }
+        
