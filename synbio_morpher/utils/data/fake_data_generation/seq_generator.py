@@ -10,6 +10,7 @@ from typing import List
 import numpy as np
 import jax.numpy as jnp
 import jax.random as jr
+import pandas as pd
 import random
 from Bio.Seq import Seq
 
@@ -42,8 +43,8 @@ class SeqGenerator():
 
     @staticmethod
     def generate_str_from_probdict(str_prob_dict: dict, slength) -> str:
-        population = list(str_prob_dict.keys())
-        probabilities = list(str_prob_dict.values())
+        population = sorted(str_prob_dict.keys())
+        probabilities = sorted(str_prob_dict.values())
         return ''.join(random.choices(population, probabilities, k=slength))
 
     @staticmethod
@@ -52,6 +53,18 @@ class SeqGenerator():
         probabilities = np.array(list(str_prob_dict.values()))
         str_choices = np.random.choice(population, size=shape, p=probabilities)
         return [''.join(s) for s in str_choices]
+    
+    @staticmethod
+    def generate_unique_sequences(count, num_components, slength, seq_prob, seed=None):
+        rng = jr.PRNGKey(seed)
+        bases = list(seq_prob.keys())
+        probs = np.array(list(seq_prob.values()))
+        seqs = jr.choice(rng, np.arange(
+            len(bases)), p=probs, shape=(count * num_components, slength))
+        seqs = np.vectorize(lambda x: bases[x])(np.array(seqs))
+        sequences = set([''.join(s) for s in seqs])
+        return np.array(list(sequences)).reshape((count, num_components))
+
 
     def get_sequence_complement(self, seq):
         if self.stype == 'RNA':
@@ -181,12 +194,31 @@ class NucleotideGenerator(SeqGenerator):
                     template=t
                 )
         return paths
+    
+    def generate_sequences(self, count=1, slength=20, num_components=3, seed=0, 
+                           name='rc', species_names=None, out_type='json') -> pd.DataFrame:
+        sequences = self.generate_unique_sequences(
+            count=count,
+            num_components=num_components,
+            slength=slength,
+            seq_prob=self.SEQ_POOL,
+            seed=seed
+        )
+        species_names = species_names if species_names is not None else [f'{self.stype}_{i}' for i in range(num_components)]
+        df = pd.DataFrame(sequences, columns=species_names)
+        # df['circuit_name'] = [f'{name}_{i}' for i in range(len(df))]
+        
+        out_path = self.data_writer.output(data=df, out_name=name, out_type=out_type,
+                                           return_path=True,
+                                           subfolder='circuits',
+                                           write_master=True)
+        return df
 
 
 class RNAGenerator(NucleotideGenerator):
 
     SEQ_POOL = {
-        'A': 0.2452,
+        'A': 0.2451,
         'C': 0.2458,
         'G': 0.2622,
         'U': 0.2469
@@ -200,7 +232,7 @@ class RNAGenerator(NucleotideGenerator):
 class DNAGenerator(NucleotideGenerator):
 
     SEQ_POOL = {
-        'A': 0.2452,
+        'A': 0.2451,
         'C': 0.2458,
         'G': 0.2622,
         'T': 0.2469

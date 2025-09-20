@@ -29,7 +29,8 @@ from fire import Fire
 # from synbio_morpher.scripts.parameter_grid_analysis.run_parameter_grid_analysis import main
 # from synbio_morpher.scripts.parameter_grid_analysis.run_multi_parameter_grid_analysis import main
 # from synbio_morpher.scripts.mc_evolution.run_mc_evolution import main
-from synbio_morpher.scripts.ensemble_simulate_by_interaction.run_ensemble_simulate_by_interaction import main
+# from synbio_morpher.scripts.ensemble_simulate_by_interaction.run_ensemble_simulate_by_interaction import main
+from synbio_morpher.scripts.generate_sequence_batch.run_generate_sequence_batch import main
 
 
 FORMAT = "[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"
