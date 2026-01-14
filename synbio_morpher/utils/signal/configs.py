@@ -9,13 +9,12 @@ import inspect
 import logging
 import numpy as np
 from typing import List
-# from synbio_morpher.utils.signal.signals import Signal, AdaptationTarget, OscillatingSignal
 from synbio_morpher.utils.signal.signals_new import Signal
 from synbio_morpher.utils.circuit.agnostic_circuits.circuit_manager import Circuit
 
 
 # TODO: Delete
-def get_signal_type(signal_type: str) -> Signal:
+def get_signal_type(signal_type: str) -> type:
     return Signal
 #     if signal_type == 'abstract':
 #         return Signal

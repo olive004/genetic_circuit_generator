@@ -99,9 +99,9 @@
             "preprocessing_func": null,
             "only_visualise_circuits": false
         },
-        "analyse_mutated_templates_loaded_0": {
+        "vis_0_histplots": {
             "experiment": {
-                "purpose": "analyse_mutated_templates_loaded_0"
+                "purpose": "vis_0_histplots"
             },
             "source_dirs": {
                 "is_source_dir_incomplete": true,
@@ -113,9 +113,9 @@
             "preprocessing_func": null,
             "only_visualise_circuits": false
         },
-        "analyse_mutated_templates_loaded_1": {
+        "vis_1_histplots_interactions": {
             "experiment": {
-                "purpose": "analyse_mutated_templates_loaded_1"
+                "purpose": "vis_1_histplots_interactions"
             },
             "source_dirs": {
                 "is_source_dir_incomplete": true,
@@ -127,9 +127,9 @@
             "preprocessing_func": null,
             "only_visualise_circuits": false
         },
-        "analyse_mutated_templates_loaded_2": {
+        "vis_2_histplots_diffs_ratios": {
             "experiment": {
-                "purpose": "analyse_mutated_templates_loaded_2"
+                "purpose": "vis_2_histplots_diffs_ratios"
             },
             "source_dirs": {
                 "is_source_dir_incomplete": true,
@@ -141,9 +141,9 @@
             "preprocessing_func": null,
             "only_visualise_circuits": false
         },
-        "analyse_mutated_templates_loaded_3": {
+        "vis_3_mutation_types_positions_1": {
             "experiment": {
-                "purpose": "analyse_mutated_templates_loaded_3"
+                "purpose": "vis_3_mutation_types_positions_1"
             },
             "source_dirs": {
                 "is_source_dir_incomplete": true,
@@ -155,9 +155,9 @@
             "preprocessing_func": null,
             "only_visualise_circuits": false
         },
-        "analyse_mutated_templates_loaded_4": {
+        "vis_3_mutation_types_positions_2": {
             "experiment": {
-                "purpose": "analyse_mutated_templates_loaded_4"
+                "purpose": "vis_3_mutation_types_positions_2"
             },
             "source_dirs": {
                 "is_source_dir_incomplete": true,

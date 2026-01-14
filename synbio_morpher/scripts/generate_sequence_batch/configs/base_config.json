@@ -1,0 +1,25 @@
+{
+    "experiment": {
+        "purpose": "generate_sequence_batch",
+        "no_visualisations": true,
+        "no_numerical": true,
+        "debug_mode": 0
+    },
+    "interaction_simulator": {
+        "name": "IntaRNA",
+        "postprocess": true
+    },
+    "molecular_params": "./synbio_morpher/utils/common/configs/RNA_circuit/molecular_params.json",
+    "circuit_generation": {
+        "name": "rc",
+        "repetitions": 1000000,
+        "species_count": 3,
+        "sequence_length": 20,
+        "generator_protocol": "random",
+        "proportion_to_mutate": 1.0,
+        "template": null,
+        "seed": 1
+    },
+    "system_type": "RNA"
+}
+        

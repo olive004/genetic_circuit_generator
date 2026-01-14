@@ -2,9 +2,10 @@
     "IntaRNA": "./synbio_morpher/utils/common/configs/simulators/intaRNA_args.json",
     "simulation_steady_state": {
         "max_time": 20,
-        "method": "DOP853",
-        "steady_state_solver": "jax",
+        "method": "Dopri5",
+        "steady_state_solver": "diffrax",
         "time_interval": 0.01,
-        "use_zero_rates": true
+        "use_zero_rates": true,
+        "stepsize_controller": "piecewise"
     }
 }

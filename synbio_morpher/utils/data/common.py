@@ -3,18 +3,18 @@
 # All rights reserved.
 
 # This source code is licensed under the MIT-style license found in the
-# LICENSE file in the root directory of this source tree. 
-    
+# LICENSE file in the root directory of this source tree.
 
 
 import logging
+from typing import Optional, List
 import pandas as pd
 
 
 class Data():
     """ Holds things like FASTA files or other genetic info files. """
 
-    def __init__(self, loaded_data: dict, identities: dict = {}, source_files=None) -> None:
+    def __init__(self, loaded_data: Optional[dict], identities: dict = {}, source_files: Optional[str] = None) -> None:
         self.data = loaded_data if loaded_data is not None else {}
         self.source = source_files
         self.sample_names = self.make_sample_names()
@@ -39,12 +39,12 @@ class Data():
                 f'Identities not found: {names_table.values()} not in {source}')
         return indexed_identities
 
-    def make_sample_names(self, sample_names: list = None) -> list:
+    def make_sample_names(self, sample_names: Optional[List[str]] = None) -> List[str]:
         if type(self.data) == dict:
             return list(self.data.keys())
         elif type(self.data) == pd.DataFrame:
             return list(self.data.columns)
-        elif self.data is None:
+        elif self.data is None and (sample_names is not None):
             return sample_names
         raise ValueError(f'Unrecognised loaded data type {type(self.data)}.')
 
@@ -71,7 +71,7 @@ class Data():
         return self._sample_names
 
     @sample_names.getter
-    def sample_names(self):
+    def sample_names(self) -> List[str]:
         return self.make_sample_names()
         # if type(self.data) == dict:
         #     return list(self.data.keys())

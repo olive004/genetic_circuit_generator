@@ -15,8 +15,11 @@
 __pycache__
 __pycache__/*
 bioreaction
+src/bioreaction/
+synbio_morpher/src/bioreaction/
 data/*
 !data/example
+!data/summarise_simulation/2023_07_17_222747
 explanations/output
 lib/*
 Miniconda3*

@@ -120,8 +120,8 @@ def R(B11, B12, B13, B22, B23, B33):
     
     analytics = compute_analytics(y, t, labels=np.arange(y.shape[-1]), signal_onehot=signal_onehot)
     
-    s = analytics['sensitivity_wrt_species-0']
-    p = analytics['precision_wrt_species-0']
+    s = analytics['sensitivity']
+    p = analytics['precision']
     # print(f'Sensitivity {output_idxs[0]}:', s[tuple(output_idxs)])
     # print(f'Precision {output_idxs[0]}:', p[tuple(output_idxs)])
     

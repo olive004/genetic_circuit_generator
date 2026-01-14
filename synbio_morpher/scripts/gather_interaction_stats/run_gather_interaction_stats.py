@@ -3,8 +3,8 @@
 # All rights reserved.
 
 # This source code is licensed under the MIT-style license found in the
-# LICENSE file in the root directory of this source tree. 
-    
+# LICENSE file in the root directory of this source tree.
+
 from functools import partial
 import logging
 import os
@@ -81,6 +81,7 @@ def main(config=None, data_writer=None):
     experiment.run_experiment()
 
     return config, data_writer
+
 
 if __name__ == "__main__":
     Fire(main)

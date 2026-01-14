@@ -5,7 +5,7 @@
 # This source code is licensed under the MIT-style license found in the
 # LICENSE file in the root directory of this source tree. 
     
-from typing import List, Union
+from typing import List, Union, Optional
 import glob
 import os
 from synbio_morpher.utils.misc.string_handling import remove_file_extension
@@ -15,7 +15,7 @@ from synbio_morpher.utils.misc.errors import ExperimentError
 from synbio_morpher.utils.data.data_format_tools.common import load_multiple_as_list
 
 
-def isolate_filename(filepath: str):
+def isolate_filename(filepath: Optional[str]):
     if type(filepath) == str:
         return os.path.splitext(os.path.basename(filepath))[0]
     return None
@@ -33,9 +33,9 @@ def get_pathnames_from_mult_dirs(search_dirs: List[str], **get_pathnames_kwargs)
 
 def get_pathnames(search_dir: str, file_key: Union[List, str] = '', first_only: bool = False,
                   allow_empty: bool = False, subdir: str = '',
-                  subdirs: list = None,
+                  subdirs: Optional[list] = None,
                   conditional: Union[str, None] = 'filenames',
-                  as_dict=False) -> Union[dict, list]:
+                  as_dict=False):
     """ Get the pathnames in a folder given a keyword. 
 
     Args:
@@ -48,6 +48,7 @@ def get_pathnames(search_dir: str, file_key: Union[List, str] = '', first_only: 
     elif conditional == 'filenames':
         path_condition_f = os.path.isfile
 
+    path_names = []
     if type(file_key) == list:
         if as_dict and subdirs is not None:
             all_path_names = {}
@@ -70,7 +71,7 @@ def get_pathnames(search_dir: str, file_key: Union[List, str] = '', first_only: 
     elif not file_key:
         path_names = sorted([os.path.join(search_dir, f) for f in os.listdir(
             search_dir) if path_condition_f(os.path.join(search_dir, f))])
-    else:
+    elif type(file_key) == str:
         path_names = sorted([f for f in glob.glob(os.path.join(
             search_dir, '*' + file_key + '*')) if path_condition_f(f)])
     if first_only and path_names:
@@ -102,4 +103,7 @@ def convert_pathname_to_module(filepath: str):
 def import_module_from_path(module_name: str, filepath: str):
     import importlib.util
     spec = importlib.util.spec_from_file_location(module_name, filepath)
-    return importlib.util.module_from_spec(spec)
+    if spec is not None:
+        return importlib.util.module_from_spec(spec)
+    else:
+        raise ModuleNotFoundError(f'Could not find module {module_name} in {filepath}')

@@ -10,17 +10,19 @@
             },
             "experiment": {
                 "purpose": "generate_species_templates",
-                "debug_mode": false
+                "no_visualisations": true,
+                "no_numerical": true,
+                "debug_mode": 0
             },
             "molecular_params": "./synbio_morpher/utils/common/configs/RNA_circuit/molecular_params.json",
             "circuit_generation": {
-                "repetitions": 100000,
+                "repetitions": 5000,
                 "species_count": 3,
                 "sequence_length": 20,
                 "generator_protocol": "random",
                 "proportion_to_mutate": 0.5,
                 "template": null,
-                "seed": 8
+                "seed": 10
             },
             "system_type": "RNA"
         },
@@ -29,7 +31,7 @@
                 "name": "IntaRNA",
                 "postprocess": true
             },
-            "interaction_file_keyword": ["energies", "eqconstants", "binding_rates_dissociation"],
+            "interaction_file_keyword": ["energies", "eqconstants", "binding_rates_dissociation", "binding_sites"],
             "molecular_params": "./synbio_morpher/utils/common/configs/RNA_circuit/molecular_params.json",
             "experiment": {
                 "purpose": "gather_interaction_stats"
@@ -50,7 +52,7 @@
                 "purpose": "mutation_effect_on_interactions_signal",
                 "no_visualisations": true,
                 "no_numerical": true,
-                "debug_mode": false
+                "debug_mode": 0
             },
             "interaction_simulator": {
                 "name": "IntaRNA",
@@ -60,16 +62,16 @@
                 "min_num_interacting": 0,
                 "min_num_self_interacting": 0,
                 "max_self_interacting": null,
-                "max_total": 10000,
+                "max_total": 20000,
                 "not_in_dirs": []
             },
             "mutations_args": {
                 "algorithm": "random",
-                "mutation_counts": 10,
-                "mutation_nums_within_sequence": [1, 2, 3, 5, 10, 15],
+                "mutation_counts": 8,
+                "mutation_nums_within_sequence": [1, 2, 3, 5, 7, 10, 15],
                 "mutation_nums_per_position": 1,
                 "concurrent_species_to_mutate": "single_species_at_a_time",
-                "seed": 3
+                "seed": 0
             },
             "signal": {
                 "inputs": ["RNA_0"],
@@ -77,23 +79,31 @@
                 "function_name": "step_function",
                 "function_kwargs": {
                     "impulse_center": 1, 
-                    "impulse_halfwidth": 5, 
+                    "impulse_halfwidth": 0.5, 
                     "target": 2
                 }
             },
             "simulation": {
-                "dt0": 0.1,
+                "dt0": 0.01,
+                "dt1": 0.5,
                 "t0": 0,
-                "t1": 600,
-                "tmax": 120000,
+                "t1": 500,
+                "tmax": 2000,
                 "solver": "diffrax",
                 "use_batch_mutations": true,
                 "interaction_factor": 1,
-                "batch_size": 20000,
+                "batch_size": 4000,
                 "max_circuits": 60000,
                 "device": "gpu",
                 "threshold_steady_states": 0.05, 
-                "use_rate_scaling": true
+                "use_initial_to_add_signal": false,
+                "use_rate_scaling": true,
+                "method": "Dopri5",
+                "stepsize_controller": "adaptive"
+            },
+            "simulation_steady_state": {
+                "method": "Dopri5",
+                "stepsize_controller": "adaptive"
             },
             "source_of_interaction_stats": {
                 "is_source_dir_incomplete": true,
@@ -117,9 +127,22 @@
             "preprocessing_func": null,
             "only_visualise_circuits": false
         },
-        "analyse_mutated_templates_loaded_0": {
+        "vis_6_scatter": {
             "experiment": {
-                "purpose": "analyse_mutated_templates_loaded_0"
+                "purpose": "vis_6_scatter"
+            },
+            "source_dirs": {
+                "is_source_dir_incomplete": true,
+                "source_dir": "./data/ensemble_mutation_effect_analysis",
+                "purpose_to_get_source_dir_from": "summarise_simulation",
+                "source_dir_actually_used_POSTERITY": null
+            },
+            "preprocessing_func": null,
+            "only_visualise_circuits": false
+        },
+        "vis_0_histplots": {
+            "experiment": {
+                "purpose": "vis_0_histplots"
             },
             "source_dirs": {
                 "is_source_dir_incomplete": true,
@@ -131,9 +154,9 @@
             "preprocessing_func": null,
             "only_visualise_circuits": false
         },
-        "analyse_mutated_templates_loaded_0_nosig": {
+        "vis_0_histplots_nosig": {
             "experiment": {
-                "purpose": "analyse_mutated_templates_loaded_0_nosig"
+                "purpose": "vis_0_histplots_nosig"
             },
             "source_dirs": {
                 "is_source_dir_incomplete": true,
@@ -148,9 +171,9 @@
                 "inputs": ["RNA_0"]
             }
         },
-        "analyse_mutated_templates_loaded_1": {
+        "vis_1_histplots_interactions": {
             "experiment": {
-                "purpose": "analyse_mutated_templates_loaded_1"
+                "purpose": "vis_1_histplots_interactions"
             },
             "source_dirs": {
                 "is_source_dir_incomplete": true,
@@ -162,9 +185,9 @@
             "preprocessing_func": null,
             "only_visualise_circuits": false
         },
-        "analyse_mutated_templates_loaded_2": {
+        "vis_2_histplots_diffs_ratios": {
             "experiment": {
-                "purpose": "analyse_mutated_templates_loaded_2"
+                "purpose": "vis_2_histplots_diffs_ratios"
             },
             "source_dirs": {
                 "is_source_dir_incomplete": true,
@@ -176,9 +199,9 @@
             "preprocessing_func": null,
             "only_visualise_circuits": false
         },
-        "analyse_mutated_templates_loaded_2_nosig": {
+        "vis_2_histplots_diffs_ratios_nosig": {
             "experiment": {
-                "purpose": "analyse_mutated_templates_loaded_2_nosig"
+                "purpose": "vis_2_histplots_diffs_ratios_nosig"
             },
             "source_dirs": {
                 "is_source_dir_incomplete": true,
@@ -193,9 +216,9 @@
                 "inputs": ["RNA_0"]
             }
         },
-        "analyse_mutated_templates_loaded_3": {
+        "vis_3_mutation_types_positions_1": {
             "experiment": {
-                "purpose": "analyse_mutated_templates_loaded_3"
+                "purpose": "vis_3_mutation_types_positions_1"
             },
             "source_dirs": {
                 "is_source_dir_incomplete": true,
@@ -207,9 +230,9 @@
             "preprocessing_func": null,
             "only_visualise_circuits": false
         },
-        "analyse_mutated_templates_loaded_4": {
+        "vis_3_mutation_types_positions_2": {
             "experiment": {
-                "purpose": "analyse_mutated_templates_loaded_4"
+                "purpose": "vis_3_mutation_types_positions_2"
             },
             "source_dirs": {
                 "is_source_dir_incomplete": true,
@@ -221,9 +244,9 @@
             "preprocessing_func": null,
             "only_visualise_circuits": false
         },
-        "analyse_mutated_templates_loaded_5": {
+        "vis_4_histplots_thresholded": {
             "experiment": {
-                "purpose": "analyse_mutated_templates_loaded_5"
+                "purpose": "vis_4_histplots_thresholded"
             },
             "source_dirs": {
                 "is_source_dir_incomplete": true,
@@ -235,9 +258,9 @@
             "preprocessing_func": null,
             "only_visualise_circuits": false
         },
-        "analyse_mutated_templates_loaded_means": {
+        "vis_5_means_analytics": {
             "experiment": {
-                "purpose": "analyse_mutated_templates_loaded_means"
+                "purpose": "vis_5_means_analytics"
             },
             "source_dirs": {
                 "is_source_dir_incomplete": true,

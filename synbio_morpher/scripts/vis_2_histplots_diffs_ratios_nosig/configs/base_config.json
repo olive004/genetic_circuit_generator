@@ -1,0 +1,14 @@
+{
+    "experiment": {
+        "purpose": "vis_2_histplots_diffs_ratios_nosig"
+    },
+    "source_dirs": {
+        "is_source_dir_incomplete": false,
+        "source_dir": ["data/ensemble_mutation_effect_analysis/2023_01_11_184659/summarise_simulation"],
+        "purpose_to_get_source_dir_from": null,
+        "source_dir_actually_used_POSTERITY": null
+    },
+    "signal": {
+        "inputs": ["RNA_0"]
+    }
+}

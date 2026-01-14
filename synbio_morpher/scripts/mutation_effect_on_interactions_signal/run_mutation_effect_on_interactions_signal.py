@@ -32,7 +32,7 @@ def main(config=None, data_writer=None):
     # Start_experiment
     config_file, source_experiment_dir = get_search_dir(
         config_searchdir_key='source_of_interaction_stats', config_file=config_file)
-    config_file = expand_config(config=config_file)
+    # config_file = expand_config(config=config_file)
     config_file = prepare_config(config_file)
 
     def logging_circuit(clist: list):
@@ -74,7 +74,7 @@ def main(config=None, data_writer=None):
         [
             # Mutate circuit
             Protocol(
-                partial(Evolver(data_writer=data_writer, sequence_type=config_file.get('system_type'), 
+                partial(Evolver(data_writer=data_writer, sequence_type=config_file['system_type'], 
                                 seed=config_file.get('mutations_args', {}).get('seed', np.random.randint(1000))).mutate,
                         write_to_subsystem=True,
                         algorithm=config_file.get('mutations_args', {}).get('algorithm', 'random')),
@@ -108,6 +108,7 @@ def main(config=None, data_writer=None):
                              write_to_subsystem=True, batch_size=config_file['simulation'].get('batch_size', 100),
                              methods={
                 "compute_interactions": {},
+                "write_interactions": {},
                 "init_circuits": {'batch': True},
                 "simulate_signal_batch": {'ref_circuit': None,
                                           'batch': True},

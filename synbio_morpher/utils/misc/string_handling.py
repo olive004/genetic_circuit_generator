@@ -12,6 +12,7 @@ from difflib import SequenceMatcher
 from functools import partial
 import logging
 
+import pandas as pd
 import numpy as np
 
 
@@ -21,7 +22,7 @@ def add_outtype(filepath, out_type):
     return filepath + '.' + out_type
 
 
-def convert_liststr_to_list(str_list: List[str]):
+def convert_liststr_to_list(str_list: pd.Series):
     """ Convert lists of ints that have been turned into strings
     back into lists. """
     return str_list.strip('[]').str.split(',').apply(lambda x: [int(xx) for xx in x if xx != ''])
@@ -120,6 +121,8 @@ def sort_by_ordinal_number(string_list: list) -> list:
     int_equivalents = string_to_num_fromlist(string_list, base_string)
     sorted_strings = deepcopy(string_list)
     for i, int_equiv in enumerate(int_equivalents):
+        if type(int_equiv) != int:
+            raise ValueError(f'The int string was not returned as an int, but as {int_equiv} ({type(int_equiv)})')    
         sorted_strings[int_equiv-1] = string_list[i]
     return sorted_strings
 

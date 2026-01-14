@@ -10,7 +10,7 @@ import logging
 import numpy as np
 import os
 import pandas as pd
-from typing import Tuple, List, Union
+from typing import Tuple, List, Union, Optional
 
 from synbio_morpher.srv.parameter_prediction.simulator import RawSimulationHandling
 from synbio_morpher.srv.io.loaders.experiment_loading import INTERACTION_FILE_ADDONS, load_param, load_units
@@ -31,10 +31,12 @@ class MolecularInteractions():
     precision = np.float32
 
     def __init__(self,
-                 binding_rates_association=None,
-                 binding_rates_dissociation=None,
-                 energies=None,
-                 eqconstants=None, units=None, binding_sites=None,
+                 binding_rates_association: Union[np.ndarray, float],
+                 binding_rates_dissociation: Union[np.ndarray, float],
+                 energies: Union[np.ndarray, float],
+                 eqconstants: Union[np.ndarray, float],
+                 binding_sites: Union[np.ndarray, float],
+                 units=None,
                  raw=None) -> None:
         self.binding_rates_association = binding_rates_association
         self.binding_rates_dissociation = binding_rates_dissociation
@@ -48,7 +50,7 @@ class MolecularInteractions():
 
     def set_precision(self):
         for attr, v in self.__dict__.items():
-            if v is None:
+            if v is None or (attr == 'raw'):
                 continue
             self.__setattr__(attr, self.precision(v))
 
@@ -56,12 +58,12 @@ class MolecularInteractions():
 class InteractionMatrix():
 
     def __init__(self,  # config_args=None,
-                 matrix_paths: dict = None,
-                 experiment_dir: str = None,
-                 num_nodes: int = None,
+                 matrix_paths: Union[dict, None] = None,
+                 experiment_dir: Union[None, str] = None,
+                 num_nodes: Optional[int] = None,
                  units: str = '',
-                 experiment_config: dict = None,
-                 interactions_loaded: dict = None,
+                 experiment_config: Union[None, dict] = None,
+                 interactions_loaded: Union[None, dict] = None,
                  allow_empty=False
                  ):
 
@@ -71,8 +73,9 @@ class InteractionMatrix():
         self.experiment_dir = experiment_dir
         self.experiment_config = experiment_config
 
-        init_nodes = num_nodes if num_nodes is not None else 3
-        nans = np.zeros((init_nodes, init_nodes)) * np.nan
+        # if num_nodes is None:
+        #     num_nodes = 1
+        nans = np.nan  # np.zeros((num_nodes, num_nodes)) * np.nan
         self.interactions = MolecularInteractions(
             binding_rates_association=nans,
             binding_rates_dissociation=nans,
@@ -95,7 +98,6 @@ class InteractionMatrix():
                 if isinstance(matrix_path, str):
                     loaded_matrix, self.units, self.sample_names = self.load(
                         matrix_path)
-                    loaded_matrix = loaded_matrix.to_numpy()
                     self.interactions.__setattr__(matrix_type, loaded_matrix)
                     self.interactions.units = self.units
                 elif isinstance(matrix_path, np.ndarray):
@@ -111,26 +113,39 @@ class InteractionMatrix():
             self.interactions.binding_rates_association = load_param(
                 filepath=None, param='association_binding_rate', experiment_config=experiment_config
             ) * np.ones_like(self.interactions.binding_rates_dissociation)
+            
+        self.post_init()
+            
+    def post_init(self):
+        vals = [len(v) for v in self.interactions.__dict__.values() if type(v) == np.array]
+        if vals:
+            max_len = np.max(vals)
+            for k, v in self.interactions.__dict__.items():
+                if (type(v) != np.array) and (type(v) != str) and np.isnan(v):
+                    self.interactions.__setattr__(k, np.zeros((max_len, max_len)) * np.nan)
 
-    def load(self, filepath, quiet=True):
+    def load(self, filepath, quiet=True) -> Tuple[np.ndarray, str, list]:
         filetype = determine_file_format(filepath)
 
         self.name = self.isolate_circuit_name(filepath, filetype)
         if filetype == 'csv':
             try:
                 matrix, sample_names = load_csv(
-                    filepath, load_as='pd', return_header=True)
+                    filepath, load_as='numpy', return_header=True)
             except FileNotFoundError as ee:
                 try:
                     matrix, sample_names = load_csv(
-                        os.path.join(PACKAGE_DIR, filepath), load_as='pd', return_header=True)
+                        os.path.join(PACKAGE_DIR, filepath), load_as='numpy', return_header=True)
                 except FileNotFoundError as e:
                     raise FileNotFoundError(ee)
         else:
             raise TypeError(
                 f'Unsupported filetype {filetype} for loading {filepath}')
-        units = load_units(
-            filepath, experiment_config=self.experiment_config, quiet=quiet)
+        if self.experiment_config is not None:
+            units = load_units(
+                filepath, experiment_config=self.experiment_config, quiet=quiet)
+        else:
+            units = 'unknown'
         return matrix, units, sample_names
 
     def isolate_circuit_name(self, circuit_filepath, filetype):
@@ -166,7 +181,7 @@ class InteractionMatrix():
 class InteractionDataHandler():
 
     def __init__(self, simulation_handler: RawSimulationHandling,
-                 quantities: np.array):
+                 quantities: np.ndarray):
         self.sample_processor = simulation_handler.get_sim_interpretation_protocol()
         self.sample_postproc = simulation_handler.get_postprocessing(
             initial=quantities)
@@ -189,7 +204,8 @@ class InteractionDataHandler():
         return interactions
 
     def parse(self, data: dict) -> MolecularInteractions:
-        eqconstants, energies, a_rates, d_rates, binding = self.make_matrix(data)
+        eqconstants, energies, a_rates, d_rates, binding = self.make_matrix(
+            data)
         raw = {s.name: v for s, v in data.items()}
         return MolecularInteractions(
             binding_rates_association=a_rates,
@@ -199,7 +215,7 @@ class InteractionDataHandler():
             binding_sites=binding,
             raw=raw)
 
-    def make_matrix(self, data: dict) -> Tuple[np.ndarray, np.ndarray]:
+    def make_matrix(self, data: dict):
         energies = np.zeros((len(data), len(data)))
         binding = np.array([[''] * len(data)] * len(data)).astype(object)
         for i, (name_i, sample) in enumerate(data.items()):
@@ -212,7 +228,7 @@ class InteractionDataHandler():
 
 
 class InteractionSimulator():
-    def __init__(self, sim_args: dict = None, allow_self_interaction: bool = True):
+    def __init__(self, sim_args: dict, allow_self_interaction: bool = True):
 
         self.simulation_handler = RawSimulationHandling(sim_args)
         self.simulator = self.simulation_handler.get_simulator(
@@ -255,9 +271,12 @@ def b_get_stats(interactions_mxs: List[InteractionMatrix]):
         "num_self_interacting": [len(i) for i in idxs_self_interacting]
     }
 
+    sample_names = interactions_mxs[0].sample_names
+    if sample_names is None:
+        sample_names = interactions_mxs
     for interaction_attr in INTERACTION_FIELDS_TO_WRITE:
-        for i, s in enumerate(interactions_mxs[0].sample_names):
-            for ii, s in enumerate(interactions_mxs[0].sample_names):
+        for i, s in enumerate(sample_names):
+            for ii, s in enumerate(sample_names):
                 attr = b_interaction_attrs[interaction_attr][:, i, ii]
                 if interaction_attr == 'binding_sites' and (type(attr) == str):
                     if type(attr) == np.ndarray and len(attr) == 1:

@@ -2,7 +2,7 @@
 
 from bioreaction.simulation.manager import simulate_steady_states
 from functools import partial
-from typing import Optional, Tuple, List
+from typing import Optional, Tuple, List, Union
 from fire import Fire
 from datetime import datetime
 import os
@@ -22,10 +22,11 @@ from synbio_morpher.utils.circuit.agnostic_circuits.circuit_manager import Circu
 from synbio_morpher.utils.common.setup import construct_circuit_from_cfg, prepare_config
 from synbio_morpher.utils.data.data_format_tools.common import load_json_as_dict
 from synbio_morpher.utils.data.data_format_tools.manipulate_fasta import load_seq_from_FASTA
-from synbio_morpher.utils.evolution.evolver import Evolver
-from synbio_morpher.utils.evolution.mutation import apply_mutation_to_sequence, get_mutation_type_mapping, reverse_mut_mapping
+from synbio_morpher.utils.evolution.evolver import Evolver, apply_mutation_to_sequence
+from synbio_morpher.utils.evolution.mutation import get_mutation_type_mapping, reverse_mut_mapping
 from synbio_morpher.utils.misc.type_handling import flatten_listlike
 from synbio_morpher.utils.results.analytics.naming import get_true_interaction_cols
+from synbio_morpher.utils.results.analytics.timeseries import log_distance, sp_prod, vec_distance
 from synbio_morpher.utils.results.experiments import Experiment, Protocol
 from synbio_morpher.utils.results.writer import DataWriter
 from synbio_morpher.srv.io.loaders.circuit_loader import load_circuit
@@ -40,13 +41,13 @@ def pick_circuits(config: dict, data: pd.DataFrame, init_sample_size: int = 1000
     data = data.iloc[np.random.choice(
         np.arange(len(data)), size=init_sample_size, replace=False)]
 
-    sensitivity_range = data['sensitivity_wrt_species-6'] > (data['sensitivity_wrt_species-6'].max() *
+    sensitivity_range = data['sensitivity'] > (data['sensitivity'].max() *
                                                              percentile)
     starting_circ_rows = data[sensitivity_range].sort_values(
-        by=['sensitivity_wrt_species-6', 'precision_wrt_species-6'], ascending=False)
+        by=['sensitivity', 'precision'], ascending=False)
 
     logging.info(
-        f'Picking circuits that have a sensitivity in the {percentile * 100}th percentile of at least {data["sensitivity_wrt_species-6"].max() * percentile}')
+        f'Picking circuits that have a sensitivity in the {percentile * 100}th percentile of at least {data["sensitivity"].max() * percentile}')
     return starting_circ_rows
 
 
@@ -77,7 +78,7 @@ def plot_starting_circuits(starting_circ_rows, data, filt, data_writer, save: bo
     data['Starting circuit'] = (data['circuit_name'].isin(starting_circ_rows['circuit_name'])) & \
         (data['mutation_name'].isin(starting_circ_rows['mutation_name'])) & filt
     sns.scatterplot(
-        data.sort_values(by='Starting circuit'), x='sensitivity_wrt_species-6', y='precision_wrt_species-6',
+        data.sort_values(by='Starting circuit'), x='sensitivity', y='precision',
         hue='Starting circuit', alpha=((data.sort_values(by='Starting circuit')['Starting circuit'] + 0.1)/1.1)
     )
     plt.xscale('log')
@@ -88,44 +89,17 @@ def plot_starting_circuits(starting_circ_rows, data, filt, data_writer, save: bo
     plt.savefig(fig_path)
 
 
-# Optimisation funcs
-def mag(vec, **kwargs):
-    return jnp.linalg.norm(vec, **kwargs)
-
-
-def vec_distance(s, p, d):
-    """ First row of each direction vector are the x's, second row are the y's """
-    P = jnp.array([s, p]).T
-    # P = [s.T, p.T]
-    sp_rep = np.repeat(d[:, 0][:, None], repeats=len(s), axis=-1).T[:, :, None]
-    AP = jnp.concatenate([sp_rep, P[:, :, None]], axis=-1)
-    area = mag(jnp.cross(AP, d[None, :, :], axis=-1), axis=-1)
-    D = area / mag(d)
-    return D
-
-
 def make_distance_func(data):
     sp_min = data[(
-        data['sensitivity_wrt_species-6'] <= 1/data['precision_wrt_species-6']) | (
-            data['precision_wrt_species-6'] <= 1/data['sensitivity_wrt_species-6'])][['sensitivity_wrt_species-6', 'precision_wrt_species-6']].min().to_numpy()
+        data['sensitivity'] <= 1/data['precision']) | (
+            data['precision'] <= 1/data['sensitivity'])][['sensitivity', 'precision']].min().to_numpy()
     sp_max = data[(
-        data['sensitivity_wrt_species-6'] <= 1/data['precision_wrt_species-6']) | (
-            data['precision_wrt_species-6'] <= 1/data['sensitivity_wrt_species-6'])][['sensitivity_wrt_species-6', 'precision_wrt_species-6']].max().to_numpy()
+        data['sensitivity'] <= 1/data['precision']) | (
+            data['precision'] <= 1/data['sensitivity'])][['sensitivity', 'precision']].max().to_numpy()
     sp_left = np.array([sp_min[0], sp_max[1]])
     sp_right = np.array([sp_max[0], sp_min[1]])
     d = np.array([sp_left, sp_right]).T
     return partial(vec_distance, d=d)
-
-
-def sp_prod(s, p, sp_factor=1, s_weight=0):
-    """ Log product of s and p """
-    s_lin = 1/p
-    return s * (p * (s - s_lin))  # * sp_factor + s_weight)
-
-
-def log_distance(s, p):
-    lin = np.array([np.logspace(6, -3, 2), np.logspace(-6, 3, 2)])
-    return vec_distance(s, p, lin)
 
 
 # Simulation functions
@@ -197,9 +171,9 @@ def choose_next(batch: list, data_writer, distance_func, choose_max: int = 4, ta
         for t in target_species:
             t_idx = t_idxs[t]
             d[f'Sensitivity species-{t}'] = np.asarray(
-                [b['sensitivity_wrt_species-6'][t_idx] for b in batch_analytics])
+                [b['sensitivity'][t_idx] for b in batch_analytics])
             d[f'Precision species-{t}'] = np.asarray(
-                [b['precision_wrt_species-6'][t_idx] for b in batch_analytics])
+                [b['precision'][t_idx] for b in batch_analytics])
             d[f'Overshoot species-{t}'] = np.asarray(
                 [b['overshoot'][t_idx] for b in batch_analytics])
 
@@ -209,8 +183,8 @@ def choose_next(batch: list, data_writer, distance_func, choose_max: int = 4, ta
             d[f'Parent Precision species-{t}'] = jax.tree_util.tree_map(
                 lambda n: rs[rs['Name'] == n][f'Precision species-{t}'].iloc[0], d['Name'].to_list())
 
-            # d[f'dS species-{t}'] = np.asarray([b['sensitivity_wrt_species-6_diff_to_base_circuit'][t_idx] for b in batch_analytics])
-            # d[f'dP species-{t}'] = np.asarray([b['precision_wrt_species-6_diff_to_base_circuit'][t_idx] for b in batch_analytics])
+            # d[f'dS species-{t}'] = np.asarray([b['sensitivity_diff_to_base_circuit'][t_idx] for b in batch_analytics])
+            # d[f'dP species-{t}'] = np.asarray([b['precision_diff_to_base_circuit'][t_idx] for b in batch_analytics])
             d[f'dS species-{t}'] = d[f'Sensitivity species-{t}'] - \
                 d[f'Parent Sensitivity species-{t}']
             d[f'dP species-{t}'] = d[f'Precision species-{t}'] - \
@@ -241,7 +215,7 @@ def choose_next(batch: list, data_writer, distance_func, choose_max: int = 4, ta
         keep_n = int(0.7 * choose_max)
         if use_diversity and all([c in prev_circuits for c in circuits_chosen]) and (len(data_1) >= keep_n):
             _, circuits_chosen = select_next(
-                data_1[data_1['Circuit Obj'].isin(prev_circuits[:keep_n])], choose_max, t)
+                data_1[data_1['Circuit Obj'].isin(prev_circuits[:keep_n])], choose_max, t, use_diversity)
             data_1['Diversity selection'] = data_1['Circuit Obj'].isin(
                 circuits_chosen)
 
@@ -274,7 +248,7 @@ def choose_next(batch: list, data_writer, distance_func, choose_max: int = 4, ta
 
 # Process mutations between runs
 
-def get_mutated_sequences(path, circ_row, mutation_type_mapping) -> dict:
+def get_mutated_sequences(path, circ_row, mutation_type_mapping) -> Union[str, dict]:
 
     if not os.path.isfile(path):
         path = os.path.join('..', path)
@@ -284,14 +258,18 @@ def get_mutated_sequences(path, circ_row, mutation_type_mapping) -> dict:
         return path
 
     sequences = load_seq_from_FASTA(path, as_type='dict')
-    mutated_species = circ_row['mutation_name'][:5]
-    mutation_types = jax.tree_util.tree_map(
-        lambda x: mutation_type_mapping[x], circ_row['mutation_type'])
-    mutated_sequence = apply_mutation_to_sequence(
-        sequences[mutated_species], circ_row['mutation_positions'], mutation_types)
+    if type(sequences) == dict:
+        mutated_species = circ_row['mutation_name'][:5]
+        mutation_types = jax.tree_util.tree_map(
+            lambda x: mutation_type_mapping[x], circ_row['mutation_type'])
+        mutated_sequence = apply_mutation_to_sequence(
+            sequences[mutated_species], circ_row['mutation_positions'], mutation_types)
 
-    sequences[mutated_species] = mutated_sequence
-    return sequences
+        sequences[mutated_species] = mutated_sequence
+        return sequences
+    else:
+        raise ValueError(
+            f'Sequences should be a dictionary when loaded from FASTA instead of {type(sequences)}: {sequences}')
 
 
 def process_for_next_run(circuits: list, data_writer: DataWriter):
@@ -398,10 +376,10 @@ def visualise_step_plot(summary_datas: pd.DataFrame, data_writer, species: str):
     n_rows = int(np.ceil(np.sqrt(len(summary_datas))))
     n_cols = int(np.ceil(np.sqrt(len(summary_datas))))
     plt.figure(figsize=(7 * n_rows, 7 * n_cols))
-    for step, sdata in summary_datas.items():
-        ax = plt.subplot(n_rows, n_cols, step+1)
-        sns.scatterplot(sdata.sort_values(
-            by=['Next selected']), x=f'Sensitivity species-{species}', y=f'Precision species-{species}', hue='Next selected', alpha=0.1)
+    for i, (step, sdata) in enumerate(summary_datas.items()):
+        ax = plt.subplot(n_rows, n_cols, i+1)
+        sdata = sdata.sort_values(['Next selected']) # type: ignore
+        sns.scatterplot(sdata, x=f'Sensitivity species-{species}', y=f'Precision species-{species}', hue='Next selected', alpha=0.1)
         plt.xscale('log')
         plt.yscale('log')
         plt.title(f'Step {step}')
@@ -452,7 +430,7 @@ def main(config=None, data_writer=None):
     def write(summary_datas, data_writer):
         data_writer.subdivide_writing('summary_datas')
         for step, sdata in summary_datas.items():
-            data_writer.output('csv', out_name='sdata_' +
+            data_writer.output(out_type='csv', out_name='sdata_' +
                                str(step), write_master=False, data=sdata)
         data_writer.unsubdivide()
 
@@ -486,6 +464,7 @@ def main(config=None, data_writer=None):
     experiment.run_experiment()
 
     return config, data_writer
+
 
 if __name__ == "__main__":
     Fire(main)

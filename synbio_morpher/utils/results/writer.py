@@ -5,6 +5,7 @@
 # This source code is licensed under the MIT-style license found in the
 # LICENSE file in the root directory of this source tree. 
     
+from typing import Optional
 from copy import deepcopy
 from functools import partial
 from abc import ABC, abstractmethod
@@ -24,7 +25,7 @@ from synbio_morpher.utils.misc.type_handling import find_sublist_max, convert_ty
 
 class DataWriter():
 
-    def __init__(self, purpose: str, out_location: str = None, ensemble_script: str = None) -> None:
+    def __init__(self, purpose: str, out_location: Optional[str] = None, ensemble_script: Optional[str] = None) -> None:
         self.purpose = purpose
         self.script_dir = SCRIPT_DIR
         self.root_output_dir = DATA_DIR
@@ -41,17 +42,16 @@ class DataWriter():
         create_location(self.ensemble_write_dir)
         self.write_dir = deepcopy(self.ensemble_write_dir)
 
-    def output(self, out_type: str = None, out_name: str = None, overwrite: bool = False, return_path: bool = False,
-               new_file: bool = False, filename_addon: str = None, subfolder: str = None, write_master: bool = False,
+    def output(self, out_name: str, out_type: Optional[str] = None, overwrite: bool = False, return_path: bool = False,
+               new_file: bool = False, filename_addon: Optional[str] = None, subfolder: Optional[str] = None, write_master: bool = False,
                write_func=None, write_to_top_dir=False, **writer_kwargs):
 
         if out_type is None:
-            out_type = writer_kwargs
             raise ValueError(
                 f'The out_type for file "{out_name}" needs to be specified for writing with function "{write_func}".')
 
         def make_base_name(filename_addon):
-            if self.write_dir in out_name:
+            if out_name is not None and (self.write_dir in out_name):
                 base_name = os.path.basename(out_name)
             if new_file:
                 if filename_addon is None:
@@ -61,7 +61,7 @@ class DataWriter():
                 base_name = f'{out_name}'
             return base_name
 
-        def make_out_path(base_name):
+        def make_out_path(base_name) -> str:
             write_dir = self.write_dir if not write_to_top_dir else self.ensemble_write_dir
             if subfolder:
                 out_subpath = os.path.join(write_dir, subfolder)
@@ -105,7 +105,7 @@ class DataWriter():
         raise ValueError(
             f'No write function available for output of type {out_type}')
 
-    def make_location_from_purpose(self, purpose: str):
+    def make_location_from_purpose(self, purpose: str) -> str:
         try: 
             if purpose in importlib.import_module('.' +purpose, '.'.join([PACKAGE_NAME, SCRIPT_DIR])).__name__ or purpose in self.exception_dirs:
                 location = os.path.join(self.root_output_dir,
@@ -113,6 +113,8 @@ class DataWriter():
                                         self.generate_location_instance())
                 create_location(location)
                 return location
+            raise ValueError(
+                f'Unrecognised purpose {purpose} for writing data to - make sure directory of this name exists in {".".join([PACKAGE_NAME, SCRIPT_DIR])}')
         except ModuleNotFoundError:
             raise ModuleNotFoundError(
                 f'Unrecognised purpose {purpose} for writing data to - make sure directory of this name exists in {".".join([PACKAGE_NAME, SCRIPT_DIR])}')
@@ -172,8 +174,8 @@ class DataWriter():
         output_summary['name'] = name
         output_summary['subdir'] = self.write_dir.replace(
             self.top_write_dir + os.sep, '')
-        self.output('csv', 'output_summary', write_master=False,
-                    **{'data': output_summary})
+        self.output(out_type='csv', out_name='output_summary', write_master=False,
+                    **{'data': output_summary}) # type: ignore
 
 
 class Tabulated(ABC):
@@ -189,7 +191,8 @@ class Tabulated(ABC):
 
     @abstractmethod
     def get_table_properties(self):
-        pass
+        props = self.__dict__
+        return list(props.keys()), list(props.values())
 
 
 def kwargs_from_table(tabulated_cls: Tabulated, table: pd.Series):

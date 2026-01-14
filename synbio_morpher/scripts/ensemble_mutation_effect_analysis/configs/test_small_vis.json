@@ -1,0 +1,151 @@
+{
+    "experiment": {
+        "purpose": "ensemble_mutation_effect_analysis"
+    },
+    "base_configs_ensemble": {
+        "vis_6_scatter": {
+            "experiment": {
+                "purpose": "vis_6_scatter"
+            },
+            "source_dirs": {
+                "is_source_dir_incomplete": false,
+                "source_dir": "./data/ensemble_mutation_effect_analysis/2024_11_09_164634/summarise_simulation",
+                "purpose_to_get_source_dir_from": "summarise_simulation",
+                "source_dir_actually_used_POSTERITY": null
+            },
+            "preprocessing_func": null,
+            "only_visualise_circuits": false
+        },
+        "vis_0_histplots": {
+            "experiment": {
+                "purpose": "vis_0_histplots"
+            },
+            "source_dirs": {
+                "is_source_dir_incomplete": false,
+                "source_dir": "./data/ensemble_mutation_effect_analysis/2024_11_09_164634/summarise_simulation",
+                "purpose_to_get_source_dir_from": "summarise_simulation",
+                "source_dir_actually_used_POSTERITY": null
+            },
+            "tabulated_info_differentiator": "mutation_num",
+            "preprocessing_func": null,
+            "only_visualise_circuits": false
+        },
+        "vis_0_histplots_nosig": {
+            "experiment": {
+                "purpose": "vis_0_histplots_nosig"
+            },
+            "source_dirs": {
+                "is_source_dir_incomplete": false,
+                "source_dir": "./data/ensemble_mutation_effect_analysis/2024_11_09_164634/summarise_simulation",
+                "purpose_to_get_source_dir_from": "summarise_simulation",
+                "source_dir_actually_used_POSTERITY": null
+            },
+            "tabulated_info_differentiator": "mutation_num",
+            "preprocessing_func": null,
+            "only_visualise_circuits": false,
+            "signal": {
+                "inputs": ["RNA_0"]
+            }
+        },
+        "vis_1_histplots_interactions": {
+            "experiment": {
+                "purpose": "vis_1_histplots_interactions"
+            },
+            "source_dirs": {
+                "is_source_dir_incomplete": false,
+                "source_dir": "./data/ensemble_mutation_effect_analysis/2024_11_09_164634/summarise_simulation",
+                "purpose_to_get_source_dir_from": "summarise_simulation",
+                "source_dir_actually_used_POSTERITY": null
+            },
+            "tabulated_info_differentiator": "mutation_num",
+            "preprocessing_func": null,
+            "only_visualise_circuits": false
+        },
+        "vis_2_histplots_diffs_ratios": {
+            "experiment": {
+                "purpose": "vis_2_histplots_diffs_ratios"
+            },
+            "source_dirs": {
+                "is_source_dir_incomplete": false,
+                "source_dir": "./data/ensemble_mutation_effect_analysis/2024_11_09_164634/summarise_simulation",
+                "purpose_to_get_source_dir_from": "summarise_simulation",
+                "source_dir_actually_used_POSTERITY": null
+            },
+            "tabulated_info_differentiator": "mutation_num",
+            "preprocessing_func": null,
+            "only_visualise_circuits": false
+        },
+        "vis_2_histplots_diffs_ratios_nosig": {
+            "experiment": {
+                "purpose": "vis_2_histplots_diffs_ratios_nosig"
+            },
+            "source_dirs": {
+                "is_source_dir_incomplete": false,
+                "source_dir": "./data/ensemble_mutation_effect_analysis/2024_11_09_164634/summarise_simulation",
+                "purpose_to_get_source_dir_from": "summarise_simulation",
+                "source_dir_actually_used_POSTERITY": null
+            },
+            "tabulated_info_differentiator": "mutation_num",
+            "preprocessing_func": null,
+            "only_visualise_circuits": false,
+            "signal": {
+                "inputs": ["RNA_0"]
+            }
+        },
+        "vis_3_mutation_types_positions_1": {
+            "experiment": {
+                "purpose": "vis_3_mutation_types_positions_1"
+            },
+            "source_dirs": {
+                "is_source_dir_incomplete": false,
+                "source_dir": "./data/ensemble_mutation_effect_analysis/2024_11_09_164634/summarise_simulation",
+                "purpose_to_get_source_dir_from": "summarise_simulation",
+                "source_dir_actually_used_POSTERITY": null
+            },
+            "tabulated_info_differentiator": "mutation_num",
+            "preprocessing_func": null,
+            "only_visualise_circuits": false
+        },
+        "vis_3_mutation_types_positions_2": {
+            "experiment": {
+                "purpose": "vis_3_mutation_types_positions_2"
+            },
+            "source_dirs": {
+                "is_source_dir_incomplete": false,
+                "source_dir": "./data/ensemble_mutation_effect_analysis/2024_11_09_164634/summarise_simulation",
+                "purpose_to_get_source_dir_from": "summarise_simulation",
+                "source_dir_actually_used_POSTERITY": null
+            },
+            "tabulated_info_differentiator": "mutation_num",
+            "preprocessing_func": null,
+            "only_visualise_circuits": false
+        },
+        "vis_4_histplots_thresholded": {
+            "experiment": {
+                "purpose": "vis_4_histplots_thresholded"
+            },
+            "source_dirs": {
+                "is_source_dir_incomplete": false,
+                "source_dir": "./data/ensemble_mutation_effect_analysis/2024_11_09_164634/summarise_simulation",
+                "purpose_to_get_source_dir_from": "summarise_simulation",
+                "source_dir_actually_used_POSTERITY": null
+            },
+            "tabulated_info_differentiator": "mutation_num",
+            "preprocessing_func": null,
+            "only_visualise_circuits": false
+        },
+        "vis_5_means_analytics": {
+            "experiment": {
+                "purpose": "vis_5_means_analytics"
+            },
+            "source_dirs": {
+                "is_source_dir_incomplete": false,
+                "source_dir": "./data/ensemble_mutation_effect_analysis/2024_11_09_164634/summarise_simulation",
+                "purpose_to_get_source_dir_from": "summarise_simulation",
+                "source_dir_actually_used_POSTERITY": null
+            },
+            "preprocessing_func": null,
+            "only_visualise_circuits": false
+        }
+    }
+}

@@ -29,12 +29,12 @@ def proc_info(info):
     info['num_interacting_all'] = info['num_interacting'] + \
         info['num_self_interacting']
     info['sp_distance'] = 0
-    info.loc[(info['sensitivity_wrt_species-6'] <= 1) & (info['precision_wrt_species-6'] <= 10), 'sp_distance'] = np.sqrt(
-        np.power(1-info['sensitivity_wrt_species-6'], 2) + np.power(10 - info['precision_wrt_species-6'], 2))
-    info.loc[(info['sensitivity_wrt_species-6'] <= 1) & (info['precision_wrt_species-6']
-                                                         > 10), 'sp_distance'] = np.absolute(info['sensitivity_wrt_species-6'] - 1)
-    info.loc[(info['sensitivity_wrt_species-6'] > 1) & (info['precision_wrt_species-6']
-                                                        <= 10), 'sp_distance'] = np.absolute(info['precision_wrt_species-6'] - 10)
+    info.loc[(info['sensitivity'] <= 1) & (info['precision'] <= 10), 'sp_distance'] = np.sqrt(
+        np.power(1-info['sensitivity'], 2) + np.power(10 - info['precision'], 2))
+    info.loc[(info['sensitivity'] <= 1) & (info['precision']
+                                                         > 10), 'sp_distance'] = np.absolute(info['sensitivity'] - 1)
+    info.loc[(info['sensitivity'] > 1) & (info['precision']
+                                                        <= 10), 'sp_distance'] = np.absolute(info['precision'] - 10)
 
     if type(info['mutation_type'].iloc[0]) == str:
         info['mutation_type'] = convert_liststr_to_list(
@@ -161,7 +161,7 @@ def melt(info: pd.DataFrame, num_group_cols: list, num_bs_cols: list, numerical_
     return infom
 
 
-def get_named_aggs(info: pd.DataFrame, include_log: bool = False) -> pd.DataFrame:
+def get_named_aggs(info: pd.DataFrame, include_log: bool = False) -> dict:
     # Standard Deviations
 
     relevant_cols = [
@@ -171,15 +171,15 @@ def get_named_aggs(info: pd.DataFrame, include_log: bool = False) -> pd.DataFram
         'overshoot',
         'RMSE',
         'steady_states',
-        # 'response_time_wrt_species-6',
-        # 'response_time_wrt_species-6_diff_to_base_circuit',
-        # 'response_time_wrt_species-6_ratio_from_mutation_to_base',
-        'precision_wrt_species-6',
-        'precision_wrt_species-6_diff_to_base_circuit',
-        'precision_wrt_species-6_ratio_from_mutation_to_base',
-        'sensitivity_wrt_species-6',
-        'sensitivity_wrt_species-6_diff_to_base_circuit',
-        'sensitivity_wrt_species-6_ratio_from_mutation_to_base',
+        # 'response_time',
+        # 'response_time_diff_to_base_circuit',
+        # 'response_time_ratio_from_mutation_to_base',
+        'precision',
+        'precision_diff_to_base_circuit',
+        'precision_ratio_from_mutation_to_base',
+        'sensitivity',
+        'sensitivity_diff_to_base_circuit',
+        'sensitivity_ratio_from_mutation_to_base',
         'fold_change_diff_to_base_circuit',
         # 'initial_steady_states_diff_to_base_circuit',
         # 'max_amount_diff_to_base_circuit', 'min_amount_diff_to_base_circuit',
@@ -234,7 +234,8 @@ def summ_energies(infom: pd.DataFrame, include_log: bool = True) -> pd.DataFrame
     v = infom.groupby(['circuit_name', 'mutation_num', 'sample_name'], as_index=False).agg(
         **{'frac_muts_in_binding_site' + '_std': pd.NamedAgg(column='frac_muts_in_binding_site', aggfunc='std'),
            'frac_muts_in_binding_site' + '_mean': pd.NamedAgg(column='frac_muts_in_binding_site', aggfunc='mean'),
-           'frac_muts_in_binding_site' + '_std_normed_by_mean': pd.NamedAgg(column='frac_muts_in_binding_site', aggfunc=lambda x: np.std(x) / np.max([1, np.mean(x)]))})
+           'frac_muts_in_binding_site' + '_std_normed_by_mean': pd.NamedAgg(
+               column='frac_muts_in_binding_site', aggfunc=lambda x: np.std(x) / np.max([1, np.mean(x)]))}) # type: ignore
     info_summ['frac_muts_in_binding_site' + '_std'
               ] = v['frac_muts_in_binding_site' + '_std']
     info_summ['frac_muts_in_binding_site' + '_mean'

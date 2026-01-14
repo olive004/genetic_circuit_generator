@@ -1,9 +1,0 @@
-out_name,out_path,filename_addon,out_type,name,subdir
-steady_states_data,./data/example/2023_06_14_170452/steady_states_data.csv,None,csv,steady_states_data,./data/example/2023_06_14_170452
-steady_states,./data/example/2023_06_14_170452/steady_states.svg,None,svg,steady_states,./data/example/2023_06_14_170452
-steady_states_first_derivative,./data/example/2023_06_14_170452/steady_states_first_derivative.svg,None,svg,steady_states_first_derivative,./data/example/2023_06_14_170452
-report_steady_states,./data/example/2023_06_14_170452/report_steady_states.json,None,json,report_steady_states,./data/example/2023_06_14_170452
-signal_data,./data/example/2023_06_14_170452/signal_data.csv,None,csv,signal_data,./data/example/2023_06_14_170452
-signal,./data/example/2023_06_14_170452/signal.svg,None,svg,signal,./data/example/2023_06_14_170452
-signal_first_derivative,./data/example/2023_06_14_170452/signal_first_derivative.svg,None,svg,signal_first_derivative,./data/example/2023_06_14_170452
-report_signal,./data/example/2023_06_14_170452/report_signal.json,None,json,report_signal,./data/example/2023_06_14_170452

@@ -5,9 +5,9 @@ import numpy as np
 
 
 from synbio_morpher.srv.parameter_prediction.interactions import INTERACTION_FIELDS_TO_WRITE
-from synbio_morpher.utils.common.setup import construct_circuit_from_cfg, prepare_config, expand_model_config, compose_kwargs
+from synbio_morpher.utils.common.setup import construct_circuit_from_cfg
 from synbio_morpher.utils.data.data_format_tools.common import FORMAT_EXTS, load_json_as_dict
-from synbio_morpher.utils.evolution.mutation import implement_mutation
+from synbio_morpher.utils.evolution.evolver import implement_mutation
 from synbio_morpher.utils.misc.type_handling import inverse_dict, flatten_nested_dict
 from synbio_morpher.utils.evolution.evolver import load_mutations
 

@@ -67,13 +67,13 @@ class TestAnalytics(unittest.TestCase):
 
         # Signal in analytics
         self.assertEqual(
-            analytics[f'precision_wrt_species-{signal_idx}'][0], 1)
+            analytics[f'precision'][0], 1)
         self.assertEqual(
-            analytics[f'sensitivity_wrt_species-{signal_idx}'][0], 1)
+            analytics[f'sensitivity'][0], 1)
         self.assertEqual(
-            analytics_rev[f'precision_wrt_species-{signal_idx}'][0], 1)
+            analytics_rev[f'precision'][0], 1)
         self.assertEqual(
-            analytics_rev[f'sensitivity_wrt_species-{signal_idx}'][0], 1)
+            analytics_rev[f'sensitivity'][0], 1)
         for k in analytics.keys():
             if RATIO_KEY in k and 'deriv' not in k:
                 self.assertTrue((analytics[k][0].astype(np.float16)[0] == 1) | (
@@ -142,9 +142,9 @@ class TestAnalytics(unittest.TestCase):
                 'min_amount',
                 'RMSE',
                 'steady_states',
-                'response_time_wrt_species-6',
-                'precision_wrt_species-6',
-                'sensitivity_wrt_species-6'
+                'response_time',
+                'precision',
+                'sensitivity'
             ]
             self.assertTrue(all(info[positive_cols] > 0))
 

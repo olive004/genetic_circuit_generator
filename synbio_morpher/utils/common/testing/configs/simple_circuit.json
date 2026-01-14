@@ -44,7 +44,8 @@
         "max_circuits": 1000,
         "device": "cpu",
         "threshold_steady_states": 0.1, 
-        "use_rate_scaling": true
+        "use_rate_scaling": true,
+        "use_initial_to_add_signal": false
     },
     "system_type": "RNA"
 }

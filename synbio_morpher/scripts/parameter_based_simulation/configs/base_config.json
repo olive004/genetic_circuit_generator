@@ -19,6 +19,7 @@
         "postprocess": "True"
     },
     "molecular_params": "./synbio_morpher/utils/common/configs/RNA_circuit/molecular_params.json",
+    "molecular_params_factor": 1,
     "parameter_based_simulation": {
         "interaction_strengths": [1.00049000e-07, 1.75576522e-06, 3.08120172e-05, 5.40721727e-04,
         9.48915433e-03, 1.66525674e-01, 2.92236790e+00, 5.12847897e+01,
@@ -40,19 +41,28 @@
     },
     "simulation": {
         "dt0": 0.01,
+        "dt1": 0.5,
         "t0": 0,
-        "t1": 100,
-        "tmax": 120000,
+        "t1": 500,
+        "tmax": 5000,
         "solver": "diffrax",
         "use_batch_mutations": true,
-        "batch_size": 10000,
-        "max_circuits": 20000,
+        "interaction_factor": 1,
+        "batch_size": 15000,
+        "max_circuits": 60000,
         "device": "gpu",
-        "threshold_steady_states": 0.04, 
+        "threshold_steady_states": 0.01, 
+        "use_initial_to_add_signal": false,
         "use_rate_scaling": true,
-        "use_initial_to_add_signal": false
+        "method": "Dopri5",
+        "stepsize_controller": "adaptive"
+    },
+    "simulation_steady_state": {
+        "method": "Dopri5",
+        "stepsize_controller": "adaptive"
     },
     "include_prod_deg": false,
     "system_type": "RNA",
-    "batch_size": 10000
+    "batch_size": 15000,
+    "batch_to_skip_to": 14
 }

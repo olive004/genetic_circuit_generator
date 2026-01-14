@@ -10,6 +10,8 @@ import os
 from typing import Union, Optional
 import numpy as np
 import pandas as pd
+import jax.numpy as jnp
+import jax
 import jaxlib
 import importlib
 
@@ -27,7 +29,7 @@ FORMAT_EXTS = {
 
 
 def verify_file_type(filepath: str, file_type: str):
-    assert file_type in filepath or inverse_dict(FORMAT_EXTS).get(file_type) in filepath, \
+    assert file_type in filepath or inverse_dict(FORMAT_EXTS)[file_type] in filepath, \
         f'File {filepath} is not of type {file_type}'
 
 
@@ -60,7 +62,7 @@ def get_filename_from_within_package(json_pathname: str) -> str:
     return full_json_pathname
 
 
-def load_json_as_dict(json_pathname: Union[str, dict], process=True) -> dict:
+def load_json_as_dict(json_pathname: Union[str, dict, None], process=True) -> dict:
     if not json_pathname:
         return {}
     elif type(json_pathname) == dict:
@@ -110,6 +112,8 @@ def load_json_mult(file_paths: list, as_type=dict) -> list:
         return load_multiple_as_list(file_paths, load_json_as_dict)
     elif as_type == pd.DataFrame:
         return load_multiple_as_list(file_paths, load_json_as_df)
+    else:
+        raise NotImplementedError(f'Cannot return {file_paths} as {as_type}.')
 
 
 def load_csv(file_path, **kwargs) -> pd.DataFrame:
@@ -135,7 +139,7 @@ def process_dict_for_json(dict_like) -> Union[list, dict]:
             dict_like[k] = process_dict_for_json(v)
         elif type(v) == np.bool_:
             dict_like[k] = bool(v)
-        elif type(v) == np.ndarray or type(v) in jaxlib.xla_extension.__dict__.values():
+        elif type(v) == np.ndarray or (type(v) == jnp.ndarray) or (type(v) == jax.Array) or (type(v) == jaxlib.xla_extension.ArrayImpl):
             dict_like[k] = v.tolist()
         elif type(v) == np.float32 or type(v) == np.int64 or type(v) == np.float16:
             dict_like[k] = str(v)
@@ -149,18 +153,18 @@ def process_json(json_dict):
     return json_dict
 
 
-def write_csv(data: pd.DataFrame, out_path: str, overwrite=False):
-    import jaxlib
+def write_csv(data, out_path: str, overwrite=False):
     if type(data) == dict:
         data = {k: [v] for k, v in data.items()}
         data = pd.DataFrame.from_dict(data, dtype=object)
     if type(data) == pd.DataFrame:
-        if overwrite or not os.path.exists(out_path):
-            data.to_csv(out_path, index=None)
+        if overwrite or (not os.path.exists(out_path)):
+            extra_kwargs = {}
         else:
-            data.to_csv(out_path, mode='a', header=None, index=None) 
-    elif type(data) == np.ndarray or type(data) == jaxlib.xla_extension.DeviceArray or type(data) == jaxlib.xla_extension.ArrayImpl:
-        pd.DataFrame(data).to_csv(out_path, mode='a', header=None, index=None)
+            extra_kwargs = {'mode': 'a', 'header': None}
+        data.to_csv(path_or_buf=out_path, index=None, **extra_kwargs)  # type: ignore
+    elif (type(data) == np.ndarray) or (type(data) == jax.Array):
+        pd.DataFrame(data).to_csv(out_path, mode='a', header=None, index=None) # type: ignore
     else:
         raise TypeError(
             f'Unsupported: cannot output data of type {type(data)} to csv.')
@@ -171,12 +175,12 @@ def write_json(data: Union[dict, pd.DataFrame], out_path: str, overwrite=False):
         data.reset_index(drop=True, inplace=True)
         data.to_json(out_path)
     else:
-        data = process_dict_for_json(data)
+        out = process_dict_for_json(data)
         with open(out_path, 'w+') as fn:
-            json.dump(data, fp=fn, indent=4)
+            json.dump(out, fp=fn, indent=4)
 
 
-def write_np(data: np.array, out_path: str, overwrite=False):
+def write_np(data: np.ndarray, out_path: str, overwrite=False):
     if not overwrite and os.path.exists(out_path):
         return
     np.save(file=out_path, arr=data)

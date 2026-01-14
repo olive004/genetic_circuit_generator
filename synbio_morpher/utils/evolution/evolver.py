@@ -8,14 +8,14 @@
 from functools import partial
 import logging
 import os
-from typing import Tuple, List
+from typing import Tuple, List, Union, Optional
 import numpy as np
+import pandas as pd
 from bioreaction.model.data_containers import Species
 from synbio_morpher.srv.io.loaders.misc import load_csv
 from synbio_morpher.utils.evolution.mutation import get_mutation_type_mapping, Mutations, EXCLUDED_NUCS
-from synbio_morpher.utils.misc.type_handling import flatten_listlike, flatten_nested_dict
+from synbio_morpher.utils.misc.type_handling import flatten_listlike
 from synbio_morpher.utils.results.writer import DataWriter, kwargs_from_table
-from synbio_morpher.utils.misc.string_handling import add_outtype
 
 
 from synbio_morpher.utils.circuit.agnostic_circuits.circuit import Circuit
@@ -26,9 +26,9 @@ class Evolver():
     def __init__(self,
                  data_writer: DataWriter,
                  mutation_type: str = 'random',
-                 sequence_type: str = None,
-                 seed: int = None,
-                 concurrent_species_to_mutate: str = '') -> None:
+                 sequence_type: str = 'RNA',
+                 seed: int = 0,
+                 concurrent_species_to_mutate: Union[str, list] = '') -> None:
         self.data_writer = data_writer
         self.mutation_type = mutation_type  # Not implemented
         self.out_name = 'mutations'
@@ -107,7 +107,8 @@ class Evolver():
                         spec_iter = [
                             s for s in circuit.model.species if s.name == self.concurrent_species_to_mutate]
                     else:
-                        logging.warning(f'Could not find {self.concurrent_species_to_mutate} among the circuit species:')
+                        logging.warning(
+                            f'Could not find {self.concurrent_species_to_mutate} among the circuit species:')
                         logging.warning(circuit.species_names)
                 elif type(self.concurrent_species_to_mutate) == list:
                     spec_iter = []
@@ -132,8 +133,10 @@ class Evolver():
                     for mutation_counts in circuit.mutations_args['mutation_counts']:
                         for mutation_idx in range(mutation_counts):
 
-                            positions = positions if positions_chosen is not None else mutation_sampler(
-                                len(sequence), mutation_nums_within_sequence).flatten()
+                            positions = mutation_sampler(
+                                len(sequence), mutation_nums_within_sequence).flatten().tolist()
+                            # positions = positions if positions_chosen is not None else mutation_sampler(
+                            #     len(sequence), mutation_nums_within_sequence).flatten()
                             mutation_types, positions = self.sample_mutations(
                                 sequence, positions, circuit.mutations_args['mutation_nums_per_position'])
 
@@ -205,15 +208,15 @@ class Evolver():
             if n > len(possible_transitions):
                 logging.warning(
                     f'Cannot pick {n} when there are only {len(possible_transitions)} choices')
-            mutation_types[p] = list(np.random.choice(
-                list(possible_transitions.values()), size=n, replace=False))
+            mutation_types[p] = np.random.choice(
+                list(possible_transitions.values()), size=n, replace=False).tolist()
             new_positions.append([p] * n)
 
         return flatten_listlike(mutation_types.values()), flatten_listlike(new_positions)
 
     def make_mutations(self, specie: Species, positions: list,
                        mutation_idx: int, mutation_types: list,
-                       algorithm: str, template_file: str):
+                       algorithm: str, template_file: Optional[str]):
         mutation_count = len(positions)
         mutations = Mutations(
             mutation_name=specie.name+'_' +
@@ -238,19 +241,42 @@ class Evolver():
 
 def load_mutations(circuit, filename=None):
     table = load_csv(filename, load_as='pandas')
+    if type(table) != pd.DataFrame:
+        raise ValueError(f'Table from {filename} must return as pandas.')
     circuit.mutations = {}
     species_names = circuit.species_names
     for i in range(len(table)):
         mutating_species = circuit.model.species[species_names.index(
             table.iloc[i]['template_name'])]
         if mutating_species not in circuit.mutations:
-            circuit.mutations[mutating_species] = {table.iloc[i]['mutation_name']: Mutations(
-                template_species=mutating_species, **kwargs_from_table(Mutations, table=table.iloc[i]))}
+            circuit.mutations[mutating_species] = {table['mutation_name'].iloc[i]: Mutations(
+                template_species=mutating_species, **kwargs_from_table(Mutations, table=table.iloc[i]))}  # type: ignore
         else:
-            circuit.mutations[mutating_species].update({table.iloc[i]['mutation_name']: Mutations(
-                template_species=mutating_species, **kwargs_from_table(Mutations, table=table.iloc[i]))})
+            circuit.mutations[mutating_species].update({table['mutation_name'].iloc[i]: Mutations(
+                template_species=mutating_species, **kwargs_from_table(Mutations, table=table.iloc[i]))})  # type: ignore
         circuit.mutations[mutating_species][table.iloc[i]['mutation_name']].mutation_types = [int(
             v) for v in circuit.mutations[mutating_species][table.iloc[i]['mutation_name']].mutation_types]
         circuit.mutations[mutating_species][table.iloc[i]['mutation_name']].positions = [int(
             v) for v in circuit.mutations[mutating_species][table.iloc[i]['mutation_name']].positions]
+    return circuit
+
+
+def apply_mutation_to_sequence(sequence: str, mutation_positions: List[int], mutation_types: List[str]) -> str:
+    sequence_arr = np.array([*sequence])
+    sequence_arr[mutation_positions] = mutation_types
+    return ''.join(sequence_arr)
+
+
+def implement_mutation(circuit: Circuit, mutation: Mutations):
+
+    if mutation.template_name in circuit.species_names:
+        sidx = circuit.species_names.index(mutation.template_name)
+        # circuit.model.species[sidx].name = mutation.mutation_name
+        circuit.model.species[sidx].physical_data = mutation.get_sequence()
+    else:
+        raise KeyError(
+            f'Could not find specie {mutation.template_name} in model for mutation {mutation.mutation_name}')
+
+    circuit.qreactions.update_reactants(circuit.model)
+    circuit.qreactions.update_reactions(circuit.model)
     return circuit

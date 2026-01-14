@@ -3,10 +3,10 @@
 # All rights reserved.
 
 # This source code is licensed under the MIT-style license found in the
-# LICENSE file in the root directory of this source tree. 
-    
+# LICENSE file in the root directory of this source tree.
+
 from functools import partial
-from typing import List, Union
+from typing import List, Union, Optional, Sequence
 import networkx as nx
 import numpy as np
 import pandas as pd
@@ -29,18 +29,16 @@ logger.setLevel(logging.INFO)
 def hist3d(data, x, y, log_scale=[False, False, False]):
     import plotly.graph_objects as go
 
-    if type(x) == str and type(y) == str:
+    if (type(x) == str) and (type(y) == str):
         xv = data[x]
         yv = data[y]
     else:
         xv, yv = x, y
-    h = np.histogram2d(xv, yv, bins=50)
-
+    h = np.histogram2d(xv, yv, bins=50) # type: ignore
 
     def bin_centers(bins):
         centers = (bins + (bins[1]-bins[0])/2)[:-1]
         return centers
-
 
     x_bins_centers = bin_centers(h[1])
     y_bins_centers = bin_centers(h[2])
@@ -51,7 +49,7 @@ def hist3d(data, x, y, log_scale=[False, False, False]):
         d = h[0]
     df = pd.DataFrame(d, index=x_bins_centers, columns=y_bins_centers)
     fig = go.Figure(data=[go.Surface(z=df)])
-    
+
     if log_scale[0]:
         fig.update_xaxes(type="log")
     if log_scale[1]:
@@ -59,14 +57,15 @@ def hist3d(data, x, y, log_scale=[False, False, False]):
     return fig
 
 
-def visualise_data(data: pd.DataFrame, data_writer: DataWriter = None,
-                   cols_x: list = None, cols_y: list = None,
-                   groupby: str = None,
+def visualise_data(data: pd.DataFrame, data_writer: DataWriter,
+                   cols_x: Optional[Sequence] = None, 
+                   cols_y: Optional[Sequence] = None,
+                   groupby: Optional[str] = None,
                    normalise_data_x: bool = False,
                    normalise_data_y: bool = False,
-                   plot_type: str = None,
+                   plot_type: Optional[str] = None,
                    out_name='test_plot', out_type='svg',
-                   hue: str = None,
+                   hue: Optional[str] = None,
                    preprocessor_func_x=None,
                    postprocessor_func_x=None,
                    postprocessor_func_y=None,
@@ -74,11 +73,11 @@ def visualise_data(data: pd.DataFrame, data_writer: DataWriter = None,
                    log_axis=[False, False],
                    threshold_value_max=None,
                    bin_count=100,
-                   selection_conditions: List[tuple] = None,
+                   selection_conditions: Optional[List[tuple]] = None,
                    remove_outliers_y: bool = False,
                    outlier_std_threshold_y=3,
-                   exclude_rows_nonempty_in_cols: list = None,
-                   exclude_rows_zero_in_cols: list = None,
+                   exclude_rows_nonempty_in_cols: Optional[list] = None,
+                   exclude_rows_zero_in_cols: Optional[list] = None,
                    plot_cols_on_same_graph=False,
                    misc_histplot_kwargs=None,
                    **plot_kwargs):
@@ -100,37 +99,38 @@ def visualise_data(data: pd.DataFrame, data_writer: DataWriter = None,
 
     cols_x = process_cols(cols_x)
     cols_y = process_cols(cols_y)
+    
+    cols_x = cols_x if cols_x is not None else [None]
 
-    def process_log_sns(data: pd.DataFrame, column_x: str, column_y: str,
-                        plot_kwrgs: dict, log_axis: list, plot_type: str = None):
+    def process_log_sns(data: pd.DataFrame, column_x: Union[tuple, str], column_y: Union[tuple, str],
+                        plot_kwrgs: dict, log_axis: list, plot_type: Optional[str] = None):
         exempt_from_log = ['histplot']
 
         def process_log(data, col, log_option, col_label):
-            if col is not None:
-                if log_option:
-                    data = data[data[col] != 0]
-                    data = data.drop(col, axis=1).join(data[col].abs())
-                    log_l = r'$Log_{10}$' + ' of '
-                    if type(col_label) == tuple:
-                        col_label = list(col_label)
-                        new_col = tuple([log_l + col_label[0]] + col_label[1:])
-                    else:
-                        new_col = r'$Log_{10}$' + ' of ' + col_label
-                    if plot_type not in exempt_from_log:
-                        log_df = np.log10(data[col])
-                        data = data.drop(col, axis=1).join(log_df)
+            if log_option:
+                data = data[data[col] != 0]
+                data = data.drop(col, axis=1).join(data[col].abs())
+                log_l = r'$Log_{10}$' + ' of '
+                if type(col_label) == tuple:
+                    col_label = list(col_label)
+                    new_col = tuple([log_l + col_label[0]] + col_label[1:])
                 else:
-                    new_col = col_label
+                    new_col = r'$Log_{10}$' + ' of ' + col_label
+                if plot_type not in exempt_from_log:
+                    log_df = np.log10(data[col])
+                    data = data.drop(col, axis=1).join(log_df)
+            else:
+                new_col = col_label
 
-                if type(col) == tuple:
-                    assert type(
-                        new_col) == tuple, 'If using multi-indexing, make sure new column names are also input as tuples'
-                    data = data.rename(
-                        columns={c: n for c, n in zip(col, new_col)})
-                else:
-                    data = data.rename(columns={col: new_col})
+            if type(col) == tuple:
+                assert type(
+                    new_col) == tuple, 'If using multi-indexing, make sure new column names are also input as tuples'
+                data = data.rename(
+                    columns={c: n for c, n in zip(col, new_col)})
+            else:
+                data = data.rename(columns={col: new_col})
             return data, new_col
-
+ 
         if column_x is not None:
             data, column_x = process_log(
                 data, column_x, log_axis[0], plot_kwrgs.get('xlabel', column_x))
@@ -144,7 +144,8 @@ def visualise_data(data: pd.DataFrame, data_writer: DataWriter = None,
 
     def preprocess_data(data: pd.DataFrame, preprocessor_func_x,
                         threshold_value_max,
-                        column_x: str, column_y: str,
+                        column_x: Union[tuple, str], 
+                        column_y: str,
                         normalise_data_x: bool, normalise_data_y: bool,
                         exclude_rows_nonempty_in_cols, exclude_rows_zero_in_cols,
                         preprocessor_func_y=None,
@@ -194,7 +195,8 @@ def visualise_data(data: pd.DataFrame, data_writer: DataWriter = None,
                 ['', 0]):
             data = exclude_rows_by_cols(data, exc_cols, condition)
 
-        data = select_rows_by_conditional_cols(data, selection_conditions)
+        if selection_conditions is not None:
+            data = select_rows_by_conditional_cols(data, selection_conditions)
         data = postprocess(data, column_x, postprocessor_func_x)
         data = postprocess(data, column_y, postprocessor_func_y)
         data.reset_index(drop=True, inplace=True)
@@ -207,7 +209,7 @@ def visualise_data(data: pd.DataFrame, data_writer: DataWriter = None,
         data.reset_index(drop=True, inplace=True)
         return data
 
-    def is_data_plotable(data: pd.DataFrame, col_x: str, col_y: str):
+    def is_data_plotable(data: pd.DataFrame, col_x: Union[tuple, str], col_y: Union[tuple, str]):
         if data.empty:
             return False
         if col_x is not None and ((data[col_x].all() and data[col_x].iloc[0] is np.nan) or data[col_x].isnull().all()):
@@ -257,7 +259,7 @@ def visualise_data(data: pd.DataFrame, data_writer: DataWriter = None,
                                         'histplot_kwargs': misc_histplot_kwargs
                                         })
                 else:
-                    logging.warning(f'Unknown plot type given "{plot_type}"')
+                    raise ValueError(f'Unknown plot type given "{plot_type}"')
 
                 if is_data_plotable(data, col_x, col_y):
                     data_writer.output(out_type=out_type, out_name=out_name,
@@ -283,7 +285,7 @@ def visualise_graph_pyvis(graph: nx.DiGraph,
     out_path = add_outtype(out_path, out_type)
 
     interactive_graph = NetworkCustom(
-        height=800, width=800, directed=True, notebook=True)
+        height='800px', width='800px', directed=True, notebook=True)
     interactive_graph.from_nx(graph, edge_weight_transf=lambda x: round(x, 7))
     interactive_graph.inherit_edge_colors(True)
     interactive_graph.set_edge_smooth('dynamic')
@@ -304,7 +306,7 @@ def visualise_graph_pyplot(graph: nx.DiGraph):
 
 
 class VisODE():
-    def __init__(self, figsize=10) -> None:
+    def __init__(self, figsize=(10, 8)) -> None:
         self.figsize = figsize
 
     def add_kwrgs(self, plt, **plot_kwrgs):
@@ -366,31 +368,33 @@ class VisODE():
         plt.savefig(out_path)
         plt.close()
 
-    def sns_generic_plot(self, plot_func, out_path: str, x: str, y: str, data: pd.DataFrame,
-                         title: str = None,
+    def sns_generic_plot(self, plot_func, out_path: str, 
+                         x: Optional[str], y: Optional[str], data: pd.DataFrame,
+                         title: Optional[str] = None,
                          figsize=(7, 5), style="ticks",
                          **plot_kwargs):
         sns.set_context('paper')
-        sns.set_theme(style=style)
+        sns.set_theme(style=style) # type: ignore
         sns.set_palette("viridis")
         if title is None:
             title = plot_kwargs.get('title')
-        if plot_kwargs.get('hue'):
-            new_hue = prettify_keys_for_label(plot_kwargs.get('hue'))
+        if plot_kwargs.get('hue') is not None:
+            new_hue = prettify_keys_for_label(plot_kwargs['hue'])
             data = data.rename(
                 columns={plot_kwargs.get('hue'): new_hue})
             plot_kwargs['hue'] = new_hue
+            pal = plot_kwargs.get('palette', sns.color_palette("viridis", len(data[plot_kwargs.get('hue')].unique())))
             plot_kwargs.update({
                 # 'palette': sns.color_palette("husl", len(data[plot_kwargs.get('hue')].unique()))
                 # 'palette': sns.color_palette("plasma", len(data[plot_kwargs.get('hue')].unique()))
-                'palette': sns.color_palette("viridis", len(data[plot_kwargs.get('hue')].unique()))
+                'palette': pal
             })
         else:
             if 'palette' in plot_kwargs:
                 plot_kwargs.pop('palette')
 
         if x is None:
-            logging.warn(
+            logging.warning(
                 'Make sure a column is specified for visualising with seaborn')
         f, ax = plt.subplots(figsize=figsize)
 
@@ -402,7 +406,8 @@ class VisODE():
                 **plot_kwargs
             ).set(title=title)
             if plot_kwargs.get('hue') and not (data[x].min() is np.nan and data[x].max() is np.nan):
-                sns.move_legend(ax, "upper left", bbox_to_anchor=(1, 1))
+                if ax.get_legend() is not None:
+                    sns.move_legend(ax, "upper left", bbox_to_anchor=(1, 1))
             f.savefig(out_path, bbox_inches='tight')
             plt.close()
         except KeyError as error:
@@ -421,7 +426,7 @@ class VisODE():
                 logging.warning(error)
 
     def sns_barplot(self, out_path: str, x: str, y: str, data: pd.DataFrame,
-                    title: str = None, xlabel=None, ylabel=None,
+                    title: Optional[str] = None, xlabel=None, ylabel=None,
                     **plot_kwargs):
         # plot_kwargs.update({'errwidth': 1})
 
@@ -436,24 +441,21 @@ class VisODE():
                               y, data, title, **plot_kwargs)
 
     def sns_scatterplot(self, out_path: str, x: str, y: str, data: pd.DataFrame,
-                        title: str = None, xlabel=None, ylabel=None,
+                        title: Optional[str] = None, xlabel=None, ylabel=None,
                         **plot_kwargs):
-        import seaborn as sns
+        plot_kwargs['palette'] = plot_kwargs.get('palette', 'viridis')
         self.sns_generic_plot(sns.scatterplot, out_path,
                               x, y, data, title, **plot_kwargs)
 
     def sns_violinplot(self, out_path: str, x: str, y: str, data: pd.DataFrame,
-                       title: str = None, xlabel=None, ylabel=None,
+                       title: Optional[str] = None, xlabel=None, ylabel=None,
                        **plot_kwargs):
-        import seaborn as sns
         self.sns_generic_plot(sns.violinplot, out_path, x, y, data, title,
                               figsize=(10, 6), **plot_kwargs)
 
     def sns_lineplot(self, out_path: str, x: str, y: str, data: pd.DataFrame,
-                     title: str = None, xlabel=None, ylabel=None,
+                     title: Optional[str] = None, xlabel=None, ylabel=None,
                      **plot_kwargs):
-        import seaborn as sns
-
         if plot_kwargs.get('hue'):
             plot_kwargs.update({
                 # 'palette': sns.color_palette("husl", len(data[plot_kwargs.get('hue')].unique()))
@@ -465,26 +467,23 @@ class VisODE():
                               x, y, data, title, **plot_kwargs)
 
     # Make visualisations for each analytic chosen
-    def heatmap(self, data: pd.DataFrame, out_path: str = None, out_type='png',
+    def heatmap(self, data: pd.DataFrame, out_path: str, out_type='png',
                 new_vis=False, vmin=None, vmax=None, **plot_kwrgs):
-        import seaborn as sns
         sns.set_theme()
 
-        plt.figure(figsize=self.figsize)
+        fig = plt.figure(figsize=self.figsize)
         ax = sns.heatmap(data, vmin=vmin, vmax=vmax)
-        fig = ax.get_figure()
         self.add_kwrgs(plt, **plot_kwrgs)
         fig.savefig(out_path)
         plt.clf()
 
     def sns_histplot(self, data: pd.DataFrame, out_path,
                      bin_count=100,
-                     x: str = None, y: str = None,
+                     x: Optional[str] = None, y: Optional[str] = None,
                      log_axis: tuple = (False, False),
-                     histplot_kwargs: dict = None,
+                     histplot_kwargs: Optional[dict] = None,
                      **plot_kwargs):
         """ log_axis: use logarithmic axes in (x-axis, y-axis) """
-        import seaborn as sns
         sns.set_context('paper')
 
         histplot_kwargs = {} if histplot_kwargs is None else histplot_kwargs
@@ -511,7 +510,7 @@ class VisODE():
                  **plot_kwrgs):
         logging.warning(f'Function "histplot" is not finished.')
         plt.figure()
-        plt.hist(data, range=(min(data), max(data)), bins=bin_count)
+        plt.hist(data, range=(min(data.min()), max(data.max())), bins=bin_count)
         self.add_kwrgs(plt, **plot_kwrgs)
         plt.savefig(out_path)
         plt.close()

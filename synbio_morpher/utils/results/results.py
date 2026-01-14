@@ -3,21 +3,21 @@
 # All rights reserved.
 
 # This source code is licensed under the MIT-style license found in the
-# LICENSE file in the root directory of this source tree. 
-    
+# LICENSE file in the root directory of this source tree.
 
 
 from copy import deepcopy
-from typing import Dict
+from typing import Dict, Optional, Any
 import logging
 import numpy as np
 from synbio_morpher.utils.misc.type_handling import assert_uniform_type
 
 
 class Result():
-    def __init__(self, name: str, result_data: np.ndarray, category: str, vis_func,
-                 time: np.ndarray = None, vis_kwargs: dict = None, analytics_kwargs: dict = None, 
-                 analytics: dict = None, no_write: bool = False) -> None:
+    def __init__(self, name: str, result_data: Optional[np.ndarray], category: str, vis_func,
+                 time: Optional[np.ndarray] = None, vis_kwargs: Optional[dict] = None, 
+                 analytics_kwargs: Optional[dict] = None,
+                 analytics: Optional[Dict[str, Any]] = None, no_write: bool = False) -> None:
         self.name = name
         self.data = result_data
         self.category = category
@@ -44,11 +44,11 @@ class ResultCollector():
 
     def __init__(self) -> None:
 
-        self.results: Dict[Result] = {}
+        self.results: Dict[str, Result] = {}
 
     def add_result(self, data, category: str, vis_func, name: str,
-                   time: np.ndarray = None, vis_kwargs: dict = None,
-                   analytics_kwargs: dict = None, analytics=None,
+                   time: Optional[np.ndarray] = None, vis_kwargs: Optional[dict] = None,
+                   analytics_kwargs: Optional[dict] = None, analytics=None,
                    no_write: bool = False) -> None:
         """ category: 'time_series', 'graph' """
         name = f'Result_{len(self.results.keys())}' if not name else name
@@ -76,7 +76,7 @@ class ResultCollector():
     def get_result(self, key) -> Result:
         result = self.results.get(key, None)
         if result is None:
-            logging.warning(
+            raise ValueError(
                 f'The keyword {key} did not return a result from {self}.')
         return result
 

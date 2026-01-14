@@ -7,18 +7,15 @@
     
 import logging
 from copy import deepcopy
-from typing import List
-from bioreaction.model.data_containers import BasicModel
-from synbio_morpher.srv.io.manage.sys_interface import make_filename_safely
+from typing import List, Union, Optional
 from synbio_morpher.srv.io.manage.data_manager import DataManager
-from synbio_morpher.utils.data.common import Data
 from synbio_morpher.utils.data.data_format_tools.common import load_json_as_dict
 from synbio_morpher.utils.misc.units import per_mol_to_per_molecule
 from synbio_morpher.utils.misc.io import isolate_filename
 from synbio_morpher.utils.misc.string_handling import make_circuit_name
 from synbio_morpher.utils.misc.type_handling import cast_all_values_as_list
 from synbio_morpher.utils.signal.configs import get_signal_type, parse_sig_args
-from synbio_morpher.utils.signal.signals import Signal
+from synbio_morpher.utils.signal.signals_new import Signal
 from synbio_morpher.utils.circuit.common.config_setup import parse_cfg_args, get_configs
 from synbio_morpher.utils.circuit.common.system_setup import get_system_type
 
@@ -32,7 +29,7 @@ ESSENTIAL_KWARGS = [
 ]
 
 
-def expand_model_config(in_config: dict, out_config: dict, sample_names: List[str]) -> dict:
+def expand_model_config(in_config: dict, out_config: dict, sample_names: Union[List[str], dict]) -> dict:
     if 'starting_concentration' not in out_config.keys():
         out_config['starting_concentration'] = {}
         for s in sample_names:
@@ -58,7 +55,7 @@ def process_molecular_params(params: dict, factor=1) -> dict:
     return params
 
 
-def compose_kwargs(prev_configs: dict = None, config: dict = None) -> dict:
+def compose_kwargs(config: dict, prev_configs: Optional[dict] = None) -> dict:
     """ Extra configs like data paths can be supplied here, eg. for circuits that were dynamically generated. """
 
     if prev_configs is not None:
@@ -66,12 +63,12 @@ def compose_kwargs(prev_configs: dict = None, config: dict = None) -> dict:
             if kwarg not in ['experiment', 'mutations_args', 'signal', 'simulation', 'include_prod_deg']:
                 config[kwarg] = c
 
-    data_manager = DataManager(filepath=config.get("data_path", None), # make_filename_safely(config.get("data_path", None)),
+    data_manager = DataManager(filepath=config.get("data_path", None),
                                identities=config.get("identities", {}),
                                data=config.get("data", None))
     kwargs = {}
     kwargs = expand_model_config(config, kwargs, data_manager.data.sample_names)
-    kwargs.update({
+    kwargs_specific = {
         "data": data_manager.data,
         "data_path": data_manager.source,
         # For pre-loading interactions
@@ -81,12 +78,13 @@ def compose_kwargs(prev_configs: dict = None, config: dict = None) -> dict:
         "interaction_simulator": config["interaction_simulator"],
         "molecular_params": config["molecular_params"],
         "mutations_args": cast_all_values_as_list(config["mutations_args"]),
-        "name": isolate_filename(data_manager.data.source),
+        "name": config.get('name', isolate_filename(data_manager.data.source)),
         "signal": config["signal"],
         "simulation": config["simulation"],
         "simulation_steady_state": config["simulation_steady_state"],
         "system_type": config["system_type"]
-    })
+    }
+    kwargs.update(kwargs_specific)
     kwargs["name"] = kwargs["name"] if kwargs["name"] is not None else make_circuit_name()
     assert all([e in kwargs for e in ESSENTIAL_KWARGS]), 'Some of the kwargs for composing ' \
         f'a circuit are not listed in essential kwargs {ESSENTIAL_KWARGS}: {dict({e: e in kwargs for e in ESSENTIAL_KWARGS})}'
@@ -99,21 +97,26 @@ def expand_config(config: dict) -> dict:
     config["interactions_loaded"] = config.get("interactions_loaded")  # Actual matrix of interactions
     config["interaction_simulator"] = config.get("interaction_simulator", {"name": "IntaRNA"})
     config["molecular_params"] = process_molecular_params(deepcopy(load_json_as_dict(config.get("molecular_params"))), config.get("molecular_params_factor", 1))
-    config["mutations_args"] = config.get("mutations_args", {})
     config["signal"] = load_json_as_dict(config.get("signal"))
-    config["simulation"] = config.get("simulation", {})
+    return config
+
+
+def add_empty_fields(config: dict) -> dict:
+    config["mutations_args"] = config.get("mutations_args", {})
     config["simulation_steady_state"] = config.get("simulation_steady_state", {})
+    config["simulation"] = config.get("simulation", {})
     config["system_type"] = config.get("system_type")
     return config
 
 
-def prepare_config(config_filepath: str = None, config_file: dict = None):
+def prepare_config(config_filepath: Optional[Union[str, dict]] = None, config_file: Optional[dict] = None):
     config_file = get_configs(config_file, config_filepath)
     config_file = expand_config(config_file)
     config_file = parse_cfg_args(config_file)
+    config_file = add_empty_fields(config_file)
     return config_file
 
-def construct_circuit_from_cfg(prev_configs: dict, config_file: dict):
+def construct_circuit_from_cfg(prev_configs: Optional[dict], config_file: dict):
     kwargs = compose_kwargs(prev_configs=prev_configs, config=config_file)
     circuit = instantiate_system(kwargs)
     if kwargs.get("signal"):

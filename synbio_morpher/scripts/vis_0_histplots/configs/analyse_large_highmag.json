@@ -1,0 +1,14 @@
+{
+    "experiment": {
+        "purpose": "vis_0_histplots"
+    },
+    "source_dirs": [
+        "data/analyse_mutated_templates/2022_09_15_133031",
+        "data/analyse_mutated_templates/2022_09_15_133041",
+        "data/analyse_mutated_templates/2022_09_15_133048",
+        "data/analyse_mutated_templates/2022_09_15_133054"
+    ],
+    "tabulated_info_differentiator": "mutation_num",
+    "preprocessing_func": null,
+    "only_visualise_circuits": false
+}

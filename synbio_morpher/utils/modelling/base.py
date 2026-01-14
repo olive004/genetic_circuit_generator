@@ -18,5 +18,5 @@ class Modeller():
         self.original_max_time = max_time
         self.time_interval = time_interval
 
-    def dxdt_RNA(self):
+    def dxdt_RNA(self, t, copynumbers, full_interactions, creation_rates, degradation_rates):
         pass

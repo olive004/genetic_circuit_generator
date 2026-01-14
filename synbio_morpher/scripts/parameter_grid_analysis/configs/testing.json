@@ -32,8 +32,8 @@
                 "2": 0
             }
         },
-        "help_species_choices": "no clue haha",
-        "species_choices": ["RNA_1"],
+        "help_species_choices": "Which species should be visualised for analytics",
+        "species_choices": ["RNA_2"],
         "analytics": {
             "help": "If you want to analyse all the different analytics generated for the circuits, just make 'names' equal to None (null)",
             "names": null

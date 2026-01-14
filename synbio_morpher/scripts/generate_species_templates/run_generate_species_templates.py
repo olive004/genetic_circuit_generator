@@ -23,11 +23,12 @@ def main(config=None, data_writer=None):
             "synbio_morpher", "scripts", "generate_species_templates", "configs", "base_config.json"))
     config_file = load_json_as_dict(config)
     config_file = prepare_config(config_file)
-    exp_configs = config_file.get("circuit_generation")
+    exp_configs = config_file["circuit_generation"]
 
     protocols = [
         Protocol(
             partial(RNAGenerator(data_writer=data_writer).generate_circuits,
+                    name=exp_configs.get("name", 1),
                     iter_count=exp_configs.get("repetitions", 1),
                     num_components=exp_configs.get("species_count", 3), slength=exp_configs["sequence_length"],
                     proportion_to_mutate=exp_configs.get(
@@ -47,6 +48,12 @@ def main(config=None, data_writer=None):
             Protocol(
                 CircuitModeller(
                     result_writer=data_writer, config=config_file).compute_interactions,
+                req_input=True,
+                name="compute_interaction_strengths"
+            ),
+            Protocol(
+                CircuitModeller(
+                    result_writer=data_writer, config=config_file).write_interactions,
                 req_input=True,
                 name="compute_interaction_strengths"
             )

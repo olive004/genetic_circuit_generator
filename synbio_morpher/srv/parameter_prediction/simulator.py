@@ -34,12 +34,12 @@ NO_INTERACTION_EQCONSTANT = 0
 
 class RawSimulationHandling():
 
-    def __init__(self, config: dict = None) -> None:
+    def __init__(self, config: dict) -> None:
         self.simulator_name = config.get('name', 'IntaRNA')
         self.postprocess = config.get('postprocess')
         self.sim_kwargs = config.get('simulator_kwargs', {})
         self.fixed_rate_k_a = config.get(
-            'molecular_params').get('association_binding_rate' + '_per_molecule')
+            'molecular_params', {}).get('association_binding_rate' + '_per_molecule')
         self.units = ''
 
     def get_sim_interpretation_protocol(self):
@@ -63,6 +63,8 @@ class RawSimulationHandling():
         
         if self.simulator_name == "IntaRNA":
             return process_interaction
+        else:
+            raise NotImplementedError(f'Simulator {self.simulator_name} has not been implemented.')
 
     def get_postprocessing(self, **processor_kwrgs):
 
@@ -82,31 +84,29 @@ class RawSimulationHandling():
                     processor, funcs=processor_f)
             else:
                 return vanilla_return
+        else:
+            raise NotImplementedError(f'Simulator {self.simulator_name} has not been implemented.')
 
     def get_simulator(self, allow_self_interaction: bool):
 
         if self.simulator_name == "IntaRNA":
             from synbio_morpher.srv.parameter_prediction.IntaRNA.bin.copomus.IntaRNA import IntaRNA
             self.units = SIMULATOR_UNITS[self.simulator_name]['energy']
-            if check_IntaRNA_path():
+            potential_path = check_IntaRNA_path()
+            if potential_path is not None:
                 import sys
-                sys.path.append(check_IntaRNA_path())
+                sys.path.append(potential_path)
             return partial(simulate_IntaRNA,
                            allow_self_interaction=allow_self_interaction,
                            sim_kwargs=self.sim_kwargs,
                            simulator=IntaRNA())
 
-        if self.simulator_name == "CopomuS":
+        elif self.simulator_name == "CopomuS":
             # from synbio_morpher.utils.parameter_prediction.IntaRNA.bin.CopomuS import CopomuS
-            raise NotImplementedError
+            raise NotImplementedError(f'CopomuS has not yet been implemented')
 
         else:
-            from synbio_morpher.srv.parameter_prediction.simulator import simulate_vanilla
-            return simulate_vanilla
-
-
-def simulate_vanilla(batch):
-    raise NotImplementedError
+            raise NotImplementedError(f'Simulator {self.simulator_name} has not been implemented.')
 
 
 def check_IntaRNA_path():
@@ -163,7 +163,7 @@ def write_temp_fastas(input: dict):
     return temp_fn
 
 
-def simulate_IntaRNA(input: dict, compute_by_filename: bool, allow_self_interaction: bool, sim_kwargs: dict, simulator, filename=None):
+def simulate_IntaRNA(input, compute_by_filename: bool, allow_self_interaction: bool, sim_kwargs: dict, simulator, filename=None):
     if compute_by_filename:
         f = simulate_IntaRNA_fn
     elif sim_kwargs['threads'] > 0:
@@ -172,7 +172,7 @@ def simulate_IntaRNA(input: dict, compute_by_filename: bool, allow_self_interact
         input = (filename, input)
     else:
         f = simulate_IntaRNA_data
-    return f(input, allow_self_interaction=allow_self_interaction, sim_kwargs=sim_kwargs, simulator=simulator)
+    return f(input, allow_self_interaction=allow_self_interaction, sim_kwargs=sim_kwargs, simulator=simulator) # type: ignore
 
 
 def simulate_IntaRNA_data(batch: dict, allow_self_interaction: bool, sim_kwargs: dict, simulator):
@@ -221,7 +221,7 @@ def simulate_IntaRNA_fn(inputs: tuple, allow_self_interaction: bool, sim_kwargs:
         for s in output:
             if not allow_self_interaction and s['id1'] == s['id2']:
                 continue
-            data[species_str[s['id1']]][species_str[s['id2']]] = s
+            data[species_str[s['id1']]][species_str[s['id2']]] = s # type: ignore
     if remove_file:
         os.remove(filename)
     return data

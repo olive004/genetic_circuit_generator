@@ -7,9 +7,7 @@
     
 
 
-import logging
-from typing import Dict
-import os
+from typing import Dict, Union
 import numpy as np
 
 from synbio_morpher.utils.results.analytics.naming import get_analytics_types_all
@@ -17,7 +15,6 @@ from synbio_morpher.utils.results.results import Result
 from synbio_morpher.utils.results.writer import DataWriter
 from synbio_morpher.utils.misc.numerical import transpose_arraylike
 from synbio_morpher.utils.misc.string_handling import make_time_str
-from synbio_morpher.utils.misc.type_handling import flatten_listlike
 from synbio_morpher.utils.circuit.agnostic_circuits.circuit import Circuit
 
 
@@ -47,7 +44,7 @@ class ResultWriter(DataWriter):
                     writeable = np.squeeze(writeable)
                 writeable = list(writeable)
             elif type(writeable) == dict:
-                for k, v in writeable.items():
+                for k, v in writeable.items(): # type: ignore
                     writeable[k] = prettify_writeable(v)
             return writeable
 
@@ -67,7 +64,7 @@ class ResultWriter(DataWriter):
 
         if new_report:
             out_name = out_name + '_' + make_time_str()
-        self.output(out_type, out_name, overwrite=not (
+        self.output(out_type=out_type, out_name=out_name, overwrite=not (
             new_report), data=report)
 
     def write_numerical(self, data, out_name: str):
@@ -76,9 +73,10 @@ class ResultWriter(DataWriter):
 
     def write_analytics(self, result: Result, new_report=False):
         analytics = result.analytics
-        writeables = get_analytics_types_all()
-        self.write_report(writeables, analytics, new_report,
-                          out_name=f'report_{result.name}')
+        if analytics is not None:
+            writeables = get_analytics_types_all()
+            self.write_report(writeables, analytics, new_report,
+                            out_name=f'report_{result.name}')
 
     def write_results(self, results: Dict[str, Result], new_report=False, no_visualisations=False,
                       only_numerical=False, no_analytics=False, no_numerical=False):
@@ -87,7 +85,7 @@ class ResultWriter(DataWriter):
             if result.no_write:
                 continue
 
-            if not no_visualisations:
+            if not no_visualisations and (result.vis_kwargs is not None):
                 result.vis_kwargs.update(
                     {'new_vis': new_report, 'data': result.data})
 

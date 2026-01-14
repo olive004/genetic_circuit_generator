@@ -3,13 +3,13 @@
 # All rights reserved.
 
 # This source code is licensed under the MIT-style license found in the
-# LICENSE file in the root directory of this source tree. 
-    
-import logging
+# LICENSE file in the root directory of this source tree.
+
+from typing import Union, Tuple, Any
 import pandas as pd
 
 
-def load_csv(filepath, load_as=None, return_header=False) -> pd.DataFrame:
+def load_csv(filepath, load_as=None, return_header=False) -> Union[Any, Tuple[Any, list]]:
 
     og_csv_file = pd.read_csv(filepath)
     if load_as == 'numpy':

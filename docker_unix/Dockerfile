@@ -1,9 +1,9 @@
 # syntax=docker/dockerfile:1
 
 # https://quay.io/repository/biocontainers/intarna
-FROM quay.io/biocontainers/intarna:3.3.2--pl5321h7ff8a90_0 AS intarna_build
+FROM quay.io/biocontainers/intarna:3.4.1--pl5321hdcf5f25_0 AS intarna_build
 
-FROM nvidia/cuda:11.8.0-cudnn8-devel-ubuntu22.04 AS workdir_build
+FROM nvidia/cuda:12.6.0-cudnn-devel-ubuntu22.04 AS workdir_build
 
 ################################################################################
 #  Install python dependencies
@@ -15,8 +15,10 @@ RUN apt-get update && \
 RUN yes | apt install git
 RUN cd /usr/lib/install_requirements && \
     pip install -r ./requirements.txt 
-RUN pip install --upgrade "jax[cuda11_pip]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
+RUN pip install jax==0.4.29
+RUN pip install --upgrade "jax[cuda12_pip]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
 # RUN python3 -m pipinstall "jax[cuda11_cudnn86]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
+RUN pip install -e git+https://github.com/Steel-Lab-Oxford/core-bioreaction-simulation.git@f903c39872de43e28b56653efda689bb082cb592#egg=bioreaction
 RUN export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/cuda/lib64:/
 # RUN pip install "jax[cuda11_pip]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html
 
@@ -25,9 +27,9 @@ RUN export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/cuda/lib64:/
 ################################################################################
 ENV ROOT_DIR=/workdir
 ENV PYTHONPATH=/workdir
-ENV NVIDIA_VISIBLE_DEVICES all
-ENV NVIDIA_DRIVER_CAPABILITIES compute,utility
-ENV MNT ./..
+ENV NVIDIA_VISIBLE_DEVICES=all
+ENV NVIDIA_DRIVER_CAPABILITIES=compute,utility
+ENV MNT=./..
 WORKDIR /workdir
 # ENTRYPOINT ["/bin/bash"]
 

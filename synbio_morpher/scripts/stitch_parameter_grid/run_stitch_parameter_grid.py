@@ -38,12 +38,15 @@ def main(config=None, data_writer=None):
     experiment_settings = experiment_config['experiment']
     num_subprocesses = 1
     if experiment_settings['parallelise']:
-        num_subprocesses = experiment_settings['num_subprocesses']
+        num_subprocesses = experiment_settings.get('num_subprocesses', 1)
 
     # If there was multithreading, load each parameter_grid one by one from subfolders
     def load_parameter_grids():
         all_parameter_grids = {}
+        print(source_dir)
         subprocess_dirs = get_subprocesses_dirnames(source_dir)
+        if type(subprocess_dirs) != list:
+            raise ValueError(f'Directories from {source_dir} did not return as a list.')
         for subprocess_dir in sort_by_ordinal_number(subprocess_dirs):
             parameter_grids = get_pathnames(subprocess_dir, 'npy')
             for parameter_grid in parameter_grids:
@@ -105,6 +108,7 @@ def main(config=None, data_writer=None):
 
             nonzeros_count = 0
             next_i = 0
+            i = 0
             for ite in range(total_iterations):
                 i = int(ite/subprocess_iterations)
                 if next_i == i:
@@ -129,7 +133,7 @@ def main(config=None, data_writer=None):
     # Write full matrices
     def write_all(stitched_parameter_grids, out_type='npy'):
         for analytic_name, grid in stitched_parameter_grids.items():
-            data_writer.output(out_type, out_name=analytic_name,
+            data_writer.output(out_type=out_type, out_name=analytic_name,
                                data=grid.astype(np.float32), overwrite=True,
                                write_to_top_dir=True)
 

@@ -3,15 +3,16 @@
 # All rights reserved.
 
 # This source code is licensed under the MIT-style license found in the
-# LICENSE file in the root directory of this source tree. 
-    
-import logging
+# LICENSE file in the root directory of this source tree.
+
 from functools import partial
+from typing import Union, Optional
 import numpy as np
 import jax
 import jax.numpy as jnp
 import diffrax as dfx
-from bioreaction.simulation.simfuncs.basic_de import bioreaction_sim, bioreaction_sim_expanded
+from diffrax._step_size_controller.base import AbstractStepSizeController
+from bioreaction.simulation.simfuncs.basic_de import bioreaction_sim, bioreaction_sim_expanded, one_step_de_sim_expanded
 from bioreaction.model.data_containers import QuantifiedReactions
 from synbio_morpher.utils.modelling.base import Modeller
 
@@ -78,13 +79,14 @@ def bioreactions_simulate_signal_scan(copynumbers, time: np.ndarray, inputs, out
         return bioreaction_sim_expanded(t, carry, args=(forward_rates, reverse_rates), inputs=inputs, outputs=outputs,
                                         # forward_rates=forward_rates,
                                         # reverse_rates=reverse_rates,
-                                        signal=signal,
-                                        signal_onehot=signal_onehot), carry
+                                        # signal=signal,
+                                        # signal_onehot=signal_onehot
+                                        ), carry
     return jax.lax.scan(to_scan, copynumbers, (time))
 
 
 def bioreaction_sim_wrapper(qreactions: QuantifiedReactions, t0, t1, dt0,
-                            signal, signal_onehot: np.ndarray,
+                            signal, signal_onehot: jnp.ndarray,
                             y0=None,
                             solver=dfx.Tsit5(),
                             saveat=dfx.SaveAt(t0=True, t1=True, steps=True)):
@@ -102,24 +104,56 @@ def bioreaction_sim_wrapper(qreactions: QuantifiedReactions, t0, t1, dt0,
 
 def bioreaction_sim_dfx_expanded(y0, t0, t1, dt0,
                                  inputs, outputs, forward_rates, reverse_rates,
-                                 signal, signal_onehot: np.ndarray,
+                                 signal=None, signal_onehot: Optional[Union[int, np.ndarray]] = None,
                                  solver=dfx.Tsit5(),
                                  saveat=dfx.SaveAt(
                                      t0=True, t1=True, steps=True),
                                  max_steps=16**5,
-                                 stepsize_controller=dfx.ConstantStepSize()):
+                                 stepsize_controller: AbstractStepSizeController = dfx.ConstantStepSize(),
+                                 return_as_sol=False):
     if type(stepsize_controller) == dfx.StepTo:
         dt0 = None
     term = dfx.ODETerm(
         partial(bioreaction_sim_expanded,
                 inputs=inputs, outputs=outputs,
-                # signal=signal, 
+                # signal=signal,
                 # signal_onehot=signal_onehot,
                 forward_rates=forward_rates.squeeze(), reverse_rates=reverse_rates.squeeze()
                 )
     )
-    return dfx.diffeqsolve(term, solver,
-                           t0=t0, t1=t1, dt0=dt0,
-                           y0=y0.squeeze(),
-                           saveat=saveat, max_steps=max_steps,
-                           stepsize_controller=stepsize_controller)
+    sol = dfx.diffeqsolve(term, solver,
+                          t0=t0, t1=t1, dt0=dt0,
+                          y0=y0.squeeze(),
+                          saveat=saveat, max_steps=max_steps,
+                          stepsize_controller=stepsize_controller)
+    if return_as_sol:
+        return sol
+    return sol.ts, sol.ys
+
+
+def bioreaction_sim_dfx_naive(y0: np.ndarray, reverse_rates,
+                              t0, t1, dt0,
+                              inputs, outputs, forward_rates,
+                              save_every_n_tsteps: int = 1
+                              ):
+    """ Naive version of bioreaction_sim_dfx_expanded that does not use diffrax's ODE solver. """
+
+    y = y0.copy()
+    saves_t = np.arange(t0, t1, dt0*save_every_n_tsteps)
+    num_saves = len(saves_t)
+    saves_y = np.zeros((num_saves, *y0.shape))
+
+    save_index = 0  # To keep track of saves
+    for i, ti in enumerate(np.arange(t0, t1, dt0)):
+        for iy, yi in enumerate(y):
+            y[iy] = yi + one_step_de_sim_expanded(
+                spec_conc=yi, inputs=inputs,
+                outputs=outputs,
+                forward_rates=forward_rates,
+                reverse_rates=reverse_rates[iy]) * dt0
+
+        if i % save_every_n_tsteps == 0:
+            saves_y[save_index] = y
+            save_index += 1
+
+    return saves_t, saves_y

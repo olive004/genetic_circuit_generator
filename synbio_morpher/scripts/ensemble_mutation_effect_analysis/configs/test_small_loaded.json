@@ -79,9 +79,9 @@
             "preprocessing_func": null,
             "only_visualise_circuits": false
         },
-        "analyse_mutated_templates_loaded_0": {
+        "vis_0_histplots": {
             "experiment": {
-                "purpose": "analyse_mutated_templates_loaded_0"
+                "purpose": "vis_0_histplots"
             },
             "source_dirs": {
                 "is_source_dir_incomplete": true,
@@ -93,9 +93,9 @@
             "preprocessing_func": null,
             "only_visualise_circuits": false
         },
-        "analyse_mutated_templates_loaded_0_nosig": {
+        "vis_0_histplots_nosig": {
             "experiment": {
-                "purpose": "analyse_mutated_templates_loaded_0_nosig"
+                "purpose": "vis_0_histplots_nosig"
             },
             "source_dirs": {
                 "is_source_dir_incomplete": true,
@@ -110,9 +110,9 @@
                 "inputs": ["RNA_0"]
             }
         },
-        "analyse_mutated_templates_loaded_1": {
+        "vis_1_histplots_interactions": {
             "experiment": {
-                "purpose": "analyse_mutated_templates_loaded_1"
+                "purpose": "vis_1_histplots_interactions"
             },
             "source_dirs": {
                 "is_source_dir_incomplete": true,
@@ -124,9 +124,9 @@
             "preprocessing_func": null,
             "only_visualise_circuits": false
         },
-        "analyse_mutated_templates_loaded_3": {
+        "vis_3_mutation_types_positions_1": {
             "experiment": {
-                "purpose": "analyse_mutated_templates_loaded_3"
+                "purpose": "vis_3_mutation_types_positions_1"
             },
             "source_dirs": {
                 "is_source_dir_incomplete": true,
@@ -138,9 +138,9 @@
             "preprocessing_func": null,
             "only_visualise_circuits": false
         },
-        "analyse_mutated_templates_loaded_4": {
+        "vis_3_mutation_types_positions_2": {
             "experiment": {
-                "purpose": "analyse_mutated_templates_loaded_4"
+                "purpose": "vis_3_mutation_types_positions_2"
             },
             "source_dirs": {
                 "is_source_dir_incomplete": true,
@@ -152,9 +152,9 @@
             "preprocessing_func": null,
             "only_visualise_circuits": false
         },
-        "analyse_mutated_templates_loaded_5": {
+        "vis_4_histplots_thresholded": {
             "experiment": {
-                "purpose": "analyse_mutated_templates_loaded_5"
+                "purpose": "vis_4_histplots_thresholded"
             },
             "source_dirs": {
                 "is_source_dir_incomplete": true,
@@ -166,9 +166,9 @@
             "preprocessing_func": null,
             "only_visualise_circuits": false
         },
-        "analyse_mutated_templates_loaded_means": {
+        "vis_5_means_analytics": {
             "experiment": {
-                "purpose": "analyse_mutated_templates_loaded_means"
+                "purpose": "vis_5_means_analytics"
             },
             "source_dirs": {
                 "is_source_dir_incomplete": true,
@@ -179,9 +179,9 @@
             "preprocessing_func": null,
             "only_visualise_circuits": false
         },
-        "xanalyse_mutated_templates_loaded_2": {
+        "xvis_2_histplots_diffs_ratios": {
             "experiment": {
-                "purpose": "analyse_mutated_templates_loaded_2"
+                "purpose": "vis_2_histplots_diffs_ratios"
             },
             "source_dirs": {
                 "is_source_dir_incomplete": true,
@@ -193,9 +193,9 @@
             "preprocessing_func": null,
             "only_visualise_circuits": false
         },
-        "xanalyse_mutated_templates_loaded_2_nosig": {
+        "xvis_2_histplots_diffs_ratios_nosig": {
             "experiment": {
-                "purpose": "analyse_mutated_templates_loaded_2_nosig"
+                "purpose": "vis_2_histplots_diffs_ratios_nosig"
             },
             "source_dirs": {
                 "is_source_dir_incomplete": true,

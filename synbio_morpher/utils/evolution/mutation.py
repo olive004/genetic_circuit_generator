@@ -7,11 +7,9 @@
     
 
 
-from typing import List
+from typing import List, Optional
 from copy import deepcopy
-import numpy as np
 from bioreaction.model.data_containers import Species
-from synbio_morpher.utils.circuit.agnostic_circuits.circuit import Circuit
 from synbio_morpher.utils.results.writer import Tabulated
 
 
@@ -84,13 +82,13 @@ class Mutations(Tabulated):
 
     def __init__(self, mutation_name: str, template_species: Species,
                  template_name: str, template_seq: str,
-                 template_file: str, positions: List[int], mutation_types: List[int],
+                 template_file: Optional[str], positions: List[int], mutation_types: List[int],
                  count: int, sequence_type: str, algorithm: str) -> None:
 
         self.mutation_name = mutation_name
         self.template_species = template_species
         self.template_name = template_name # self.template_species.name
-        self.template_seq = template_seq # self.template_species.physical_data
+        self.template_seq = template_seq # self.template_species.sequence
         self.mutation_types = mutation_types
         self.positions = positions
         self.count = count
@@ -123,21 +121,6 @@ class Mutations(Tabulated):
             f'Could not find mutation for mapping key {mut_encoding}.')
 
 
-def implement_mutation(circuit: Circuit, mutation: Mutations):
-
-    if mutation.template_name in circuit.species_names:
-        sidx = circuit.species_names.index(mutation.template_name)
-        # circuit.model.species[sidx].name = mutation.mutation_name
-        circuit.model.species[sidx].physical_data = mutation.get_sequence()
-    else:
-        raise KeyError(
-            f'Could not find specie {mutation.template_name} in model for mutation {mutation.mutation_name}')
-
-    circuit.qreactions.update_reactants(circuit.model)
-    circuit.qreactions.update_reactions(circuit.model)
-    return circuit
-
-
 def reverse_mut_mapping(mut_encoding: int, sequence_type: str = 'RNA'):
     for k, v in get_mutation_type_mapping(sequence_type).items():
         if mut_encoding in list(v.values()):
@@ -146,10 +129,4 @@ def reverse_mut_mapping(mut_encoding: int, sequence_type: str = 'RNA'):
                     return mut
     raise ValueError(
         f'Could not find mutation for mapping key {mut_encoding}.')
-
-
-def apply_mutation_to_sequence(sequence: str, mutation_positions: List[int], mutation_types: List[str]) -> List[str]:
-    sequence = np.array([*sequence])
-    sequence[mutation_positions] = mutation_types
-    return ''.join(sequence)
 

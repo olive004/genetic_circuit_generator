@@ -13,23 +13,24 @@ from fire import Fire
 # from synbio_morpher.scripts.mutation_effect_on_interactions_signal.run_mutation_effect_on_interactions_signal import main
 # from synbio_morpher.scripts.summarise_simulation.run_summarise_simulation import main
 # from synbio_morpher.scripts.analyse_mutated_templates.run_analyse_mutated_templates import main
-# from synbio_morpher.scripts.analyse_mutated_templates_loaded_0.run_analyse_mutated_templates_loaded_0 import main
-# from synbio_morpher.scripts.analyse_mutated_templates_loaded_0_nosig.run_analyse_mutated_templates_loaded_0_nosig import main
-# from synbio_morpher.scripts.analyse_mutated_templates_loaded_1.run_analyse_mutated_templates_loaded_1 import main
-# from synbio_morpher.scripts.analyse_mutated_templates_loaded_2.run_analyse_mutated_templates_loaded_2 import main
-# from synbio_morpher.scripts.analyse_mutated_templates_loaded_2_nosig.run_analyse_mutated_templates_loaded_2_nosig import main
-# from synbio_morpher.scripts.analyse_mutated_templates_loaded_3.run_analyse_mutated_templates_loaded_3 import main
-# from synbio_morpher.scripts.analyse_mutated_templates_loaded_4.run_analyse_mutated_templates_loaded_4 import main
-# from synbio_morpher.scripts.analyse_mutated_templates_loaded_5.run_analyse_mutated_templates_loaded_5 import main
-# from synbio_morpher.scripts.analyse_mutated_templates_loaded_means.run_analyse_mutated_templates_loaded_means import main
-from synbio_morpher.scripts.ensemble_mutation_effect_analysis.run_ensemble_mutation_effect_analysis import main
+# from synbio_morpher.scripts.vis_0_histplots.run_vis_0_histplots import main
+# from synbio_morpher.scripts.vis_0_histplots_nosig.run_vis_0_histplots_nosig import main
+# from synbio_morpher.scripts.vis_1_histplots_interactions.run_vis_1_histplots_interactions import main
+# from synbio_morpher.scripts.vis_2_histplots_diffs_ratios.run_vis_2_histplots_diffs_ratios import main
+# from synbio_morpher.scripts.vis_2_histplots_diffs_ratios_nosig.run_vis_2_histplots_diffs_ratios_nosig import main
+# from synbio_morpher.scripts.vis_3_mutation_types_positions_1.run_vis_3_mutation_types_positions_1 import main
+# from synbio_morpher.scripts.vis_3_mutation_types_positions_2.run_vis_3_mutation_types_positions_2 import main
+# from synbio_morpher.scripts.vis_4_histplots_thresholded.run_vis_4_histplots_thresholded import main
+# from synbio_morpher.scripts.vis_5_means_analytics.run_vis_5_means_analytics import main
+# from synbio_morpher.scripts.ensemble_mutation_effect_analysis.run_ensemble_mutation_effect_analysis import main
 # from synbio_morpher.scripts.ensemble_visualisation.run_ensemble_visualisation import main
 # from synbio_morpher.scripts.parameter_based_simulation.run_parameter_based_simulation import main
 # from synbio_morpher.scripts.stitch_parameter_grid.run_stitch_parameter_grid import main
 # from synbio_morpher.scripts.parameter_grid_analysis.run_parameter_grid_analysis import main
 # from synbio_morpher.scripts.parameter_grid_analysis.run_multi_parameter_grid_analysis import main
-# from synbio_morpher.scripts.ensemble_parameter_grid_analysis.run_ensemble_parameter_grid_analysis import main
 # from synbio_morpher.scripts.mc_evolution.run_mc_evolution import main
+# from synbio_morpher.scripts.ensemble_simulate_by_interaction.run_ensemble_simulate_by_interaction import main
+from synbio_morpher.scripts.generate_sequence_batch.run_generate_sequence_batch import main
 
 
 FORMAT = "[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s"

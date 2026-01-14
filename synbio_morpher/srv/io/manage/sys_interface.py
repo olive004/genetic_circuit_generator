@@ -9,8 +9,7 @@
 
 import os
 from pathlib import Path
-from typing import Union
-import logging
+from typing import Union, List, Optional
 
 
 # Relative imports
@@ -28,21 +27,22 @@ elif PACKAGE_NAME in os.getcwd():
 else:
     import synbio_morpher
 
-    PACKAGE_DIR = synbio_morpher.__path__[0]
+    PACKAGE_DIR = synbio_morpher.__path__[0] # type: ignore
 
 SCRIPT_DIR = 'scripts'
 DATA_DIR = os.path.join(DATA_TOP_DIR, 'data')
 
 
-def make_filename_safely(filename: Union[str, list]):
+def make_filename_safely(filename: Optional[Union[str, dict]]) -> Optional[Union[str, dict]]:
     if type(filename) == list:
         if DATA_DIR not in filename and (os.path.abspath(DATA_DIR) not in filename):
             filename.insert(0, DATA_DIR)
-        filename = os.path.join(**filename)
-        assert os.path.isfile(filename), f'Filename {filename} is not a file - specify in config '\
+        filename_joined = os.path.join(*filename)
+        assert os.path.isfile(filename_joined), f'Filename {filename_joined} is not a file - specify in config '\
             'either as list of path constituents or absolute path.'
+        filename = filename_joined
     elif type(filename) == str:
         if DATA_DIR not in filename and (os.path.abspath(DATA_DIR) not in os.path.abspath(filename)):
             filename = os.path.join(DATA_DIR, filename)
         filename = str(Path(filename))
-    return filename
+    return filename 

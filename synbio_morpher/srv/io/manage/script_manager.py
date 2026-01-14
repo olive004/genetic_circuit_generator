@@ -8,18 +8,16 @@
 
 
 from datetime import datetime
-from typing import Tuple
+from typing import Tuple, Union, Optional
 import logging
-import os
 from functools import partial
 import pandas as pd
-import importlib
 
 
 from synbio_morpher.srv.io.manage.sys_interface import SCRIPT_DIR, PACKAGE_NAME
 from synbio_morpher.utils.results.writer import DataWriter
 from synbio_morpher.utils.results.result_writer import ResultWriter
-from synbio_morpher.utils.misc.io import convert_pathname_to_module, get_pathnames_from_mult_dirs
+from synbio_morpher.utils.misc.io import get_pathnames_from_mult_dirs
 from synbio_morpher.utils.results.experiments import Protocol
 from synbio_morpher.utils.data.data_format_tools.common import load_json_as_dict, load_csv_mult
 
@@ -37,7 +35,7 @@ def import_script_func(script_name):
     return getattr(script_module, 'main')
 
 
-def script_preamble(config, data_writer = None, alt_cfg_filepath: str = None, use_resultwriter=True) -> Tuple[dict, DataWriter]:
+def script_preamble(config, data_writer = None, alt_cfg_filepath: Optional[str] = None, use_resultwriter=True) -> Tuple[dict, Union[DataWriter, ResultWriter]]:
     Writer = ResultWriter if use_resultwriter else DataWriter
     if config is None:
         config = alt_cfg_filepath

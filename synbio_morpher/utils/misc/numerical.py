@@ -5,11 +5,12 @@
 # This source code is licensed under the MIT-style license found in the
 # LICENSE file in the root directory of this source tree.
 
-import functools
+
 import logging
 from math import factorial
-from typing import Union, List
+from typing import Tuple, Union, List
 import numpy as np
+import jax.numpy as jnp
 import re
 import pandas as pd
 
@@ -61,7 +62,7 @@ def cast_astype(list_like, dtypes):
 
 def binary_arpeggiator(sequence: str, count: int):
     length = len(sequence)
-    interval = int(sequence / count)
+    interval = int(length / count)
     arpeggiation = np.arange(0, length, interval)
 
     for c in range(count):
@@ -127,7 +128,7 @@ def expand_matrix_triangle_idx(flat_triangle_idx: int, flat_triangle_size: int) 
     3rd row and 2nd column, returning the 0-based indices (2, 1) """
 
     symmat = make_symmetrical_matrix_from_sequence(
-        np.arange(flat_triangle_size))
+        np.arange(flat_triangle_size), flat_triangle_size)
     idxs = np.where(symmat == flat_triangle_idx)
 
     return (idxs[0], idxs[1])
@@ -193,13 +194,13 @@ def nan_to_replacement_string(obj, replacement_string=''):
         return obj
 
 
-def init_matrices(self, uniform_vals, ndims=2, init_type="rand") -> List[np.array]:
+def init_matrices(self, uniform_vals, ndims=2, init_type="rand") -> Tuple[np.ndarray]:
     matrices = (self.init_matrix(ndims, init_type, val)
                 for val in uniform_vals)
     return tuple(matrices)
 
 
-def init_matrix(self, ndims=2, init_type="rand", uniform_val=1) -> np.array:
+def init_matrix(self, ndims=2, init_type="rand", uniform_val=1) -> np.ndarray:
     matrix_size = np.random.randint(5) if self.data is None \
         else self.data.size
     if ndims > 1:
@@ -226,16 +227,25 @@ def is_within_range(number, range_tuple):
     return np.logical_and(range_tuple[0] <= number, number <= range_tuple[-1])
 
 
-def make_symmetrical_matrix_from_sequence(arr, side_length: int):
+def make_symmetrical(matrix):
+    # """ Thank you Copilot. Matrix should be square. """
+    # return (matrix + matrix.T) / 2
+    return matrix + matrix.T - np.diag(matrix.diagonal())
+
+
+def make_symmetrical_matrix_from_sequence(arr: np.ndarray, side_length: int):
     """ For a flat 1D array, make a symmetrical 2D matrix filling
     in the upper triangle with the 1D array. """
     if arr.ndim > 1:
         logging.warning('For flat 1D sequence array, remember to squeeze')
-    i = np.triu(
-        np.arange(side_length * side_length).reshape(side_length, side_length))
-    # idxs = np.interp(ii, np.unique(ii), np.arange(len(arr))).astype(int)
+    # i = np.triu(
+    #     np.arange(side_length * side_length).reshape(side_length, side_length))
+    # # idxs = np.interp(ii, np.unique(ii), np.arange(len(arr))).astype(int)
+    # ii = i + i.T - np.diag(i.diagonal())
+    
+    i = np.triu(np.cumsum(np.triu(np.ones(side_length))).reshape(side_length, side_length) - 1).astype(int)
     ii = i + i.T - np.diag(i.diagonal())
-    return arr[ii.flatten()].reshape(side_length, side_length)
+    return arr[ii].reshape(side_length, side_length)
 
 
 def make_symmetrical_matrix_from_sequence_nojax(arr, side_length: int):

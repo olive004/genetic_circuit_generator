@@ -52,5 +52,5 @@ class GeneCircuitLoader(DataLoader):
     def __init__(self) -> None:
         super().__init__()
 
-    def load_data(self, filepath: str, identities: dict = {}):
+    def load_data(self, filepath: str, identities: dict = {}) -> Data:
         return Data(super().load_data(filepath=filepath), source_files=filepath, identities=identities)
