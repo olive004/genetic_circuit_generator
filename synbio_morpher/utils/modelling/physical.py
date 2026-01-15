@@ -17,19 +17,11 @@ from synbio_morpher.utils.misc.units import SCIENTIFIC
 #     ). See the notebook `explanations/binding_energy_reparameterisation` for 
 #     more details.
 #     The binding energy is in units of kcal/mol """
-<<<<<<< HEAD
-#     F = (1-0.01)/(1+np.exp(-(E/2 + 5))) + 0.01
-#     return F
-
-
-def equilibrium_constant_reparameterisation(E, initial: np.array):
-=======
 #     F = (1-0.01)/(1+jnp.exp(-(E/2 + 5))) + 0.01
 #     return F
 
 
 def equilibrium_constant_reparameterisation(E, initial: jnp.ndarray):
->>>>>>> a9607a7df01a59796d43e7cae71bc5a712696dd5
     """ Input: E is $\Delta G$ of binding in kcal/mol. 
     Output: equilibrium constant
 
